@@ -2,9 +2,9 @@ CXX= g++ -fPIC
 NETLIBS= -lnsl
 CFLAGS= -Wall -Werror -pedantic -g
 
-all: myhttpd
+all: tips_server
 
-myhttpd: myhttpd.o
+tips_server: tips_server.o
 	$(CXX) -o $@ $@.o $(NETLIBS) $(CFLAGS) -lpthread
 
 %.o: %.cpp
