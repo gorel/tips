@@ -2,10 +2,13 @@ CXX= g++ -fPIC
 NETLIBS= -lnsl
 CFLAGS= -Wall -Werror -pedantic -g
 
-all: tips_server
+all: tips_server test_client
 
 tips_server: tips_server.o
 	$(CXX) -o $@ $@.o $(NETLIBS) $(CFLAGS) -lpthread
+
+test_client: test_client.o
+	$(CXX) -o $@ $@.o $(NETLIBS) $(CFLAGS)
 
 %.o: %.cpp
 	@echo 'Building $@ from $<'
@@ -16,6 +19,5 @@ tips_server: tips_server.o
 	$(CXX) -o $@ -c -I. $<
 
 clean:
-	rm -f *.o use-dlopen hello.so
-	rm -f *.o daytime-server
+	rm -f *.o tips_server test_client
 

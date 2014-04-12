@@ -25,6 +25,7 @@ proguard/
 # C++ Files
 *.o
 tips_server
+test_client
 
 # Temp files
 *~
