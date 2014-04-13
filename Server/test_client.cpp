@@ -7,46 +7,81 @@
 #include <resolv.h>
 #include <arpa/inet.h>
 
-#define MAXBUF          1024
+#define MAXBUF		  1024
+
+int read_comment(char *buf, int n);
 
 int main(int argc, char **argv)
 {
-	if (argc != 4)
+	if (argc != 3)
+	{
+		printf("Usage: ./test_client <hostname> <port>\n");
 		exit(-1);
-	
+	}
+
 	int sockfd, n;
-    struct sockaddr_in dest;
-    char buffer[MAXBUF];
+	struct sockaddr_in dest;
+	char buffer[MAXBUF];
 	
-	int port = atoi(argv[1]);
-	char *hostname = argv[2];
-	char *request = argv[3];
+	char *hostname = argv[1];
+	int port = atoi(argv[2]);
+	char request[MAXBUF * 2];
 
-    /*---Open socket for streaming---*/
-    if ( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
-    {
-        perror("Socket");
-        exit(errno);
-    }
+	char type;
+	char thread_num[MAXBUF];
+	char name[MAXBUF];
+	char message[MAXBUF];
 
-    /*---Initialize server address/port struct---*/
-    bzero(&dest, sizeof(dest));
-    dest.sin_family = AF_INET;
-    dest.sin_port = htons(port);
+	/*---Open socket for streaming---*/
+	if ( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
+	{
+		perror("Socket");
+		exit(errno);
+	}
 
-    /*---Connect to server---*/
-    if ( connect(sockfd, (struct sockaddr*)&dest, sizeof(dest)) != 0 )
-    {
-        perror("Connect ");
-        exit(errno);
-    }
+	/*---Initialize server address/port struct---*/
+	bzero(&dest, sizeof(dest));
+	dest.sin_family = AF_INET;
+	dest.sin_port = htons(port);
 
-    printf("\nConnected to %s on port %d\n\n", hostname, port);
-	
+	/*---Connect to server---*/
+	if ( connect(sockfd, (struct sockaddr*)&dest, sizeof(dest)) != 0 )
+	{
+		perror("Connect ");
+		exit(errno);
+	}
+
+	/*---Parse user's request---*/
+	printf("\nConnected to %s on port %d\n\n", hostname, port);
+	printf("Input type ('G'et/'P'ost): ");
+	fflush(stdout);
+	scanf("%c", &type);
+	printf("Input thread number: ");
+	fflush(stdout);
+	scanf("%s", thread_num);
+	if (type != 'G')
+	{
+		/*---Get additional input from the user about their comment---*/
+		printf("Input your name followed by EOF (Ctrl+D): ");
+		fflush(stdout);
+		scanf("%s\n", name);
+		printf("Input your comment followed by EOF (Ctrl+D): ");
+		fflush(stdout);
+		read_comment(message, MAXBUF);
+
+		/*---Create a message from the user's input---*/
+		sprintf(request, "%c %s %s %s", type, thread_num, name, message);
+	}
+	else
+	{
+		/*---Create a message from the user's input---*/
+		sprintf(request, "%c %s", type, thread_num);
+	}
+
 	/*---Send request---*/
 	write(sockfd, request, strlen(request));
 
-    /*---Get response---*/
+	/*---Get response---*/
 	while ((n = read(sockfd, buffer, MAXBUF - 1)))
 	{
 		buffer[n] = '\0';
@@ -54,7 +89,16 @@ int main(int argc, char **argv)
 	}
 	printf("\n");
 
-    /*---Clean up---*/
-    close(sockfd);
-    return 0;
+	/*---Clean up---*/
+	close(sockfd);
+	return 0;
+}
+
+int
+read_comment(char *buf, int n)
+{
+	int c, len = 0;
+	while ((c = getchar()) != EOF && len < n)
+		buf[len++] = c;
+	return len;
 }
