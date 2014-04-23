@@ -4,15 +4,15 @@ public class Tip
 {
 	private int tipID;
 	private String tip;
-	private Date postDate;
+	private String postDate;
 	private int karma;
 	private int userID;
 
-	public Tip(int tipID, String tip, String dateString, int karma, int userID)
+	public Tip(int tipID, String tip, String postDate, int karma, int userID)
 	{
 		this.tipID = tipID;
 		this.tip = tip;
-		this.postDate = Date(dateString);
+		this.postDate = postDate;
 		this.karma = karma;
 		this.userID = userID;
 	}
@@ -27,7 +27,7 @@ public class Tip
 		return this.tip;
 	}
 
-	public Date getPostDate()
+	public String getPostDate()
 	{
 		return this.postDate;
 	}

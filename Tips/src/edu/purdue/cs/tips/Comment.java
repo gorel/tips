@@ -1,15 +1,15 @@
-import java.util.Date;
+import java.util.String;
 
 public class Comment
 {
 	private String poster;
-	private Date postDate;
+	private String postDate;
 	private String comment;
 
-	public Comment(String poster, String dateString, String comment)
+	public Comment(String poster, String postDate, String comment)
 	{
 		this.poster = poster;
-		this.postDate = Date(dateString);
+		this.postDate = postDate;
 		this.comment = comment;
 	}
 
@@ -18,9 +18,9 @@ public class Comment
 		return this.poster;
 	}
 
-	public Date getPostDate()
+	public String getPostString()
 	{
-		return this.postDate;
+		return this.postString;
 	}
 
 	public String getComment()
