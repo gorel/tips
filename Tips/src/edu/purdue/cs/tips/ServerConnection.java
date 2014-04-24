@@ -1,5 +1,6 @@
 package edu.purdue.cs.tips;
 
+import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.sql.*;
@@ -148,7 +149,7 @@ public class ServerConnection
 						stat = connection.prepareStatement(query);
 						stat.setString(1, tags[i]);
 						
-						ResultSet results = stat.executeQuery();
+						results = stat.executeQuery();
 						while (results.next())
 							intersection.add(results.getInt("tip_id"));
 
@@ -164,7 +165,7 @@ public class ServerConnection
 						stat = connection.prepareStatement(query);
 						stat.setInt(1, id.intValue());
 
-						ResultSet results = stat.executeQuery();
+						results = stat.executeQuery();
 						while (results.next())
 						{
 							int tipID = results.getInt("tip_id");
@@ -248,7 +249,7 @@ public class ServerConnection
 	{
 		try
 		{
-			new Thread()
+			Thread t = new Thread()
 			{
 				public void run()
 				{
@@ -337,9 +338,9 @@ public class ServerConnection
 						pipe = line.indexOf("|", pipe);
 
 						String dateString = line.substring(start, pipe);
-						String comment = line.substring(pipe + 1);
+						String commentString = line.substring(pipe + 1);
 
-						Comment comment = new Comment(name, dateString, comment);
+						Comment comment = new Comment(name, dateString, commentString);
 						comments.add(comment);
 					}
 				}
@@ -372,7 +373,7 @@ public class ServerConnection
 			if (word.charAt(0) == '#')
 			{
 				int end = 1;
-				while (end < word.length && Character.isLetter(word.charAt(end)))
+				while (end < word.length() && Character.isLetter(word.charAt(end)))
 					end++;
 
 				if (end > 1)

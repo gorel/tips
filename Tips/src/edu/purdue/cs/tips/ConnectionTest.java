@@ -1,39 +1,41 @@
 package edu.purdue.cs.tips;
 
+import java.util.*;
+
 public class ConnectionTest
 {
 	public static void main(String args)
 	{
 		ServerConnection conn = new ServerConnection("data.cs.purdue.edu", 9313);
-		ArrayList<Tip> tips = getNewTips(5);
+		ArrayList<Tip> tips = conn.getNewTips(5);
 		for (Tip t : tips)
 			System.out.println(t);
 
 		String[] tags = {"beauty"};
-		tips = getTipsByTags(tags);
+		tips = conn.getTipsByTags(tags);
 		for (Tip t : tips)
 			System.out.println(t);
 
-		tips = getTipsByUsername("god");
-		for (tip t : tips)
-			System.out.println(t);
-
-		upvoteTip(1);
-		tips = getNewTips(5);
+		tips = conn.getTipsByUsername("god");
 		for (Tip t : tips)
 			System.out.println(t);
 
-		downvoteTip(1);
-		tips = getNewTips(5);
+		conn.upvoteTip(1);
+		tips = conn.getNewTips(5);
 		for (Tip t : tips)
 			System.out.println(t);
 
-		ArrayList<Comment> comments = getCommentsForTip(1);
+		conn.downvoteTip(1);
+		tips = conn.getNewTips(5);
+		for (Tip t : tips)
+			System.out.println(t);
+
+		ArrayList<Comment> comments = conn.getCommentsForTip(1);
 		for (Comment c : comments)
 			System.out.println(c);
 
-		postTip("Change your oil #car #maintenance", 1);
+		conn.postTip("Change your oil #car #maintenance", 1);
 
-		postComment(1, "Lol, that's cool", "god");
+		conn.postComment(1, "Lol, that's cool", "god");
 	}
 }
