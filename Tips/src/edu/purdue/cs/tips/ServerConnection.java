@@ -28,6 +28,44 @@ public class ServerConnection
 	}
 
 	/**
+	 * Attempt to login with the given username and password
+	 * @param username the username to login with
+	 * @param password the password to login with
+	 * @return the user's user_id, or -1 on failure
+	 */
+	public int login(String username, String password)
+	{
+		try
+		{
+			int user_id = -1;
+
+			Thread t = new Thread()
+			{
+				String query = "SELECT user_id FROM users WHERE username LIKE ? AND password LIKE ?";
+				PreparedStatement stat = connection.prepareStatement(query);
+				stat.setString(1, username);
+				stat.setString(2, password);
+
+				ResultSet results = stat.executeQuery();
+				if (results.next())
+					user_id = results.getInt("user_id");
+
+				stat.close();
+				results.close();
+			};
+
+			t.start();
+			t.join();
+
+			return user_id;
+		}
+		catch (Exception e)
+		{
+			return -1;
+		}
+	}
+
+	/**
 	 * Load up to <limit> new tips from the Tips database.
 	 * @param limit the maximum number of tips to load
 	 * @return an ArrayList of Tips matchin the given criteria
