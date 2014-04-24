@@ -29,4 +29,11 @@ public class Comment
 	{
 		return this.comment;
 	}
+
+	public String toString()
+	{
+		return 	"poster:\t" + poster + "\n" +
+			"postDate\t" + postDate + "\n" +
+			"comment:\t" + comment + "\n";
+	}
 }

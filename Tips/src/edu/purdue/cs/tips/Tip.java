@@ -43,4 +43,13 @@ public class Tip
 	{
 		return this.userID;
 	}
+
+	public String toString()
+	{
+		return 	"tipID:\t" + tipID + "\n" +
+			"tip:\t" + tip + "\n" + 
+			"postDate:\t" + postDate + "\n" + 
+			"karma:\t" + karma + "\n" + 
+			"userID:\t" + userID + "\n";
+	}
 }
