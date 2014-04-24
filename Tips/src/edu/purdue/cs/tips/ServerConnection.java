@@ -260,7 +260,28 @@ public class ServerConnection
 
 			Thread t = new Thread()
 			{
-			
+				String message = String.format("G %d", tipID);
+
+				Socket socket = new Socket(hostname, port);
+				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+				while (in.ready())
+				{
+					int start, pipe;
+					String line = in.readLine();
+
+					pipe = line.indexOf("|");
+					String name = line.substring(0, pipe);
+
+					start = pipe;
+					pipe = line.indexOf("|", pipe);
+
+					String dateString = line.substring(start, pipe);
+					String comment = line.substring(pipe + 1);
+
+					Comment comment = new Comment(name, dateString, comment);
+					comments.add(comment);
+				}
 			};
 			
 			t.start();
@@ -385,15 +406,25 @@ public class ServerConnection
 	/**
 	 * Post a comment to the given tipID
 	 * @param tipID the tipID to post a comment to
+	 * @param comment the comment to post
+	 * @param username the username of the poster
 	 * @return a boolean flag if the comment was successfully posted
 	 */
-	public boolean postComment(int tipID)
+	public boolean postComment(int tipID, String comment, String username)
 	{
 		try
 		{
 			Thread t = new Thread()
 			{
-			
+				String message = String.format("P %s %s", username, comment);
+
+				Socket socket = new Socket(hostname, port);
+				PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+				out.print(message);
+
+				out.close();
+				socket.close();
 			};
 			
 			t.start();	
