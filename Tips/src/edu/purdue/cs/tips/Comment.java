@@ -1,7 +1,5 @@
 package edu.purdue.cs.tips;
 
-import java.util.String;
-
 public class Comment
 {
 	private String poster;
@@ -22,7 +20,7 @@ public class Comment
 
 	public String getPostString()
 	{
-		return this.postString;
+		return this.postDate;
 	}
 
 	public String getComment()
