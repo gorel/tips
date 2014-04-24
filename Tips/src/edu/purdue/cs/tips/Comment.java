@@ -1,3 +1,5 @@
+package edu.purdue.cs.tips;
+
 import java.util.String;
 
 public class Comment

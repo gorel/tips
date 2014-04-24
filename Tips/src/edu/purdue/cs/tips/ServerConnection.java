@@ -1,3 +1,5 @@
+package edu.purdue.cs.tips;
+
 import java.net.*;
 import java.util.*;
 import java.sql.*;
