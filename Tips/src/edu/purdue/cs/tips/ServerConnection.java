@@ -41,17 +41,20 @@ public class ServerConnection
 
 			Thread t = new Thread()
 			{
-				String query = "SELECT user_id FROM users WHERE username LIKE ? AND password LIKE ?";
-				PreparedStatement stat = connection.prepareStatement(query);
-				stat.setString(1, username);
-				stat.setString(2, password);
+				public void run()
+				{
+					String query = "SELECT user_id FROM users WHERE username LIKE ? AND password LIKE ?";
+					PreparedStatement stat = connection.prepareStatement(query);
+					stat.setString(1, username);
+					stat.setString(2, password);
 
-				ResultSet results = stat.executeQuery();
-				if (results.next())
-					user_id = results.getInt("user_id");
+					ResultSet results = stat.executeQuery();
+					if (results.next())
+						user_id = results.getInt("user_id");
 
-				stat.close();
-				results.close();
+					stat.close();
+					results.close();
+				}
 			};
 
 			t.start();
@@ -78,24 +81,27 @@ public class ServerConnection
 
 			Thread t = new Thread()
 			{
-				String query = "SELECT * FROM tips ORDER BY post_date LIMIT ?";
-				PreparedStatement stat = connection.prepareStatement(query);
-				stat.setInt(1, limit);
-
-				ResultSet results = stat.executeQuery();
-				while (results.next())
+				public void run()
 				{
-					int tipID = results.getInt("tip_id");
-					String tip = results.getString("tip")
-					String postDate = results.getString("post_date");
-					int karma = results.getInt("karma");
-					int userID = results.getInt("user_id");
-					Tip t = new Tip(tipID, tip, postDate, karma, userID);
-					tips.add(t);
-				}
+					String query = "SELECT * FROM tips ORDER BY post_date LIMIT ?";
+					PreparedStatement stat = connection.prepareStatement(query);
+					stat.setInt(1, limit);
 
-				stat.close();
-				results.close();
+					ResultSet results = stat.executeQuery();
+					while (results.next())
+					{
+						int tipID = results.getInt("tip_id");
+						String tip = results.getString("tip");
+						String postDate = results.getString("post_date");
+						int karma = results.getInt("karma");
+						int userID = results.getInt("user_id");
+						Tip t = new Tip(tipID, tip, postDate, karma, userID);
+						tips.add(t);
+					}
+
+					stat.close();
+					results.close();
+				}
 			};
 			
 			t.start();
@@ -123,53 +129,56 @@ public class ServerConnection
 
 			Thread t = new Thread()
 			{
-				String query = "SELECT tip_id FROM tags WHERE tag LIKE ?";
-				PreparedStatement stat = connection.prepareStatement(query);
-				stat.setString(1, tags[0]);
-
-				ResultSet results = stat.executeQuery();
-				while (results.next())
-					tipIDs.add(results.getInt("tip_id");
-
-				stat.close();
-				results.close();
-
-				for (int i = 1; i < tags.length; i++)
+				public void run()
 				{
-					ArrayList<Integer> intersection = new ArrayList<Integer>();
-					stat = connection.prepareStatement(query);
-					stat.setString(1, tags[i]);
-					
+					String query = "SELECT tip_id FROM tags WHERE tag LIKE ?";
+					PreparedStatement stat = connection.prepareStatement(query);
+					stat.setString(1, tags[0]);
+
 					ResultSet results = stat.executeQuery();
 					while (results.next())
-						intersection.add(results.getInt("tip_id");
+						tipIDs.add(results.getInt("tip_id"));
 
 					stat.close();
 					results.close();
 
-					tipIDs.retainAll(intersection);
-				}
-
-				for (Integer id : tipIDs)
-				{
-					query = "SELECT * FROM tips WHERE tip_id = ?";
-					stat = connection.prepareStatement(query);
-					stat.setInt(1, id.intValue());
-
-					ResultSet results = stat.executeQuery();
-					while (results.next())
+					for (int i = 1; i < tags.length; i++)
 					{
-						int tipID = results.getInt("tip_id");
-						String tip = results.getString("tip")
-						String postDate = results.getString("post_date");
-						int karma = results.getInt("karma");
-						int userID = results.getInt("user_id");
-						Tip t = new Tip(tipID, tip, postDate, karma, userID);
-						tips.add(t);
+						ArrayList<Integer> intersection = new ArrayList<Integer>();
+						stat = connection.prepareStatement(query);
+						stat.setString(1, tags[i]);
+						
+						ResultSet results = stat.executeQuery();
+						while (results.next())
+							intersection.add(results.getInt("tip_id"));
+
+						stat.close();
+						results.close();
+
+						tipIDs.retainAll(intersection);
 					}
 
-					stat.close();
-					results.close();
+					for (Integer id : tipIDs)
+					{
+						query = "SELECT * FROM tips WHERE tip_id = ?";
+						stat = connection.prepareStatement(query);
+						stat.setInt(1, id.intValue());
+
+						ResultSet results = stat.executeQuery();
+						while (results.next())
+						{
+							int tipID = results.getInt("tip_id");
+							String tip = results.getString("tip");
+							String postDate = results.getString("post_date");
+							int karma = results.getInt("karma");
+							int userID = results.getInt("user_id");
+							Tip t = new Tip(tipID, tip, postDate, karma, userID);
+							tips.add(t);
+						}
+
+						stat.close();
+						results.close();
+					}
 				}
 			};
 			
@@ -197,23 +206,26 @@ public class ServerConnection
 
 			Thread t = new Thread()
 			{
-				String query = "SELECT * FROM tips WHERE USERNAME LIKE ?";
-				PreparedStatement stat = connection.prepareStatement(query);
-				
-				ResultSet results = stat.executeQuery();
-				while (results.next())
+				public void run()
 				{
-					int tipID = results.getInt("tip_id");
-					String tip = results.getString("tip")
-					String postDate = results.getString("post_date");
-					int karma = results.getInt("karma");
-					int userID = results.getInt("user_id");
-					Tip t = new Tip(tipID, tip, postDate, karma, userID);
-					tips.add(t);
-				}
+					String query = "SELECT * FROM tips WHERE USERNAME LIKE ?";
+					PreparedStatement stat = connection.prepareStatement(query);
+					
+					ResultSet results = stat.executeQuery();
+					while (results.next())
+					{
+						int tipID = results.getInt("tip_id");
+						String tip = results.getString("tip");
+						String postDate = results.getString("post_date");
+						int karma = results.getInt("karma");
+						int userID = results.getInt("user_id");
+						Tip t = new Tip(tipID, tip, postDate, karma, userID);
+						tips.add(t);
+					}
 
-				stat.close();
-				results.close();
+					stat.close();
+					results.close();
+				}
 			};
 			
 			t.start();
@@ -238,12 +250,15 @@ public class ServerConnection
 		{
 			new Thread()
 			{
-				String update = "UPDATE tips SET karma = karma + 1 WHERE tipID = ?";
-				PreparedStatement stat = connection.prepareStatement(update);
-				stat.setInt(1, tipID);
+				public void run()
+				{
+					String update = "UPDATE tips SET karma = karma + 1 WHERE tipID = ?";
+					PreparedStatement stat = connection.prepareStatement(update);
+					stat.setInt(1, tipID);
 
-				stat.executeUpdate();
-				stat.close();
+					stat.executeUpdate();
+					stat.close();
+				}
 			};
 			
 			t.start();
@@ -268,12 +283,15 @@ public class ServerConnection
 		{
 			Thread t =new Thread()
 			{
-				String update = "UPDATE tips SET karma = karma - 1 WHERE tipID = ?";
-				PreparedStatement stat = connection.prepareStatement(update);
-				stat.setInt(1, tipID);
+				public void run()
+				{
+					String update = "UPDATE tips SET karma = karma - 1 WHERE tipID = ?";
+					PreparedStatement stat = connection.prepareStatement(update);
+					stat.setInt(1, tipID);
 
-				stat.executeUpdate();
-				stat.close();
+					stat.executeUpdate();
+					stat.close();
+				}
 			};
 			
 			t.start();
@@ -300,27 +318,30 @@ public class ServerConnection
 
 			Thread t = new Thread()
 			{
-				String message = String.format("G %d", tipID);
-
-				Socket socket = new Socket(hostname, port);
-				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-				while (in.ready())
+				public void run()
 				{
-					int start, pipe;
-					String line = in.readLine();
+					String message = String.format("G %d", tipID);
 
-					pipe = line.indexOf("|");
-					String name = line.substring(0, pipe);
+					Socket socket = new Socket(hostname, port);
+					BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-					start = pipe;
-					pipe = line.indexOf("|", pipe);
+					while (in.ready())
+					{
+						int start, pipe;
+						String line = in.readLine();
 
-					String dateString = line.substring(start, pipe);
-					String comment = line.substring(pipe + 1);
+						pipe = line.indexOf("|");
+						String name = line.substring(0, pipe);
 
-					Comment comment = new Comment(name, dateString, comment);
-					comments.add(comment);
+						start = pipe;
+						pipe = line.indexOf("|", pipe);
+
+						String dateString = line.substring(start, pipe);
+						String comment = line.substring(pipe + 1);
+
+						Comment comment = new Comment(name, dateString, comment);
+						comments.add(comment);
+					}
 				}
 			};
 			
@@ -376,14 +397,17 @@ public class ServerConnection
 
 			Thread t = new Thread()
 			{
-				tags = getTags(tip);
+				public void run()
+				{
+					tags = getTags(tip);
 
-				String update = "INSERT INTO tips (tip, user_id) VALUES (?, ?)";
-				PreparedStatement stat = connection.prepareStatement(update);
-				stat.setString(1, tip);
-				stat.setInt(2, userID);
-				stat.executeUpdate();
-				stat.close();
+					String update = "INSERT INTO tips (tip, user_id) VALUES (?, ?)";
+					PreparedStatement stat = connection.prepareStatement(update);
+					stat.setString(1, tip);
+					stat.setInt(2, userID);
+					stat.executeUpdate();
+					stat.close();
+				}
 			};
 			
 			t.start();
@@ -410,25 +434,28 @@ public class ServerConnection
 			int tip_id;
 			Thread t = new Thread()
 			{
-				String query = "SELECT tip_id FROM tips WHERE tip LIKE ?";
-				String update = "INSERT INTO tags (tag) VALUES(?)";
-
-				PreparedStatement stat = connection.prepareStatement(query);
-				stat.setString(1, tip);
-				
-				ResultSet id_results = stat.executeQuery();
-				id_results.next();
-				tip_id = id_results.getInt("tip_id");
-
-				stat.close();
-				id_results.close();
-
-				for (String tag : tags)
+				public void run()
 				{
-					PreparedStatement stat2 = connection.prepareStatement(update);
-					stat2.setString(1, tag);
-					stat.executeUpdate();
+					String query = "SELECT tip_id FROM tips WHERE tip LIKE ?";
+					String update = "INSERT INTO tags (tag) VALUES(?)";
+
+					PreparedStatement stat = connection.prepareStatement(query);
+					stat.setString(1, tip);
+					
+					ResultSet id_results = stat.executeQuery();
+					id_results.next();
+					tip_id = id_results.getInt("tip_id");
+
 					stat.close();
+					id_results.close();
+
+					for (String tag : tags)
+					{
+						PreparedStatement stat2 = connection.prepareStatement(update);
+						stat2.setString(1, tag);
+						stat.executeUpdate();
+						stat.close();
+					}
 				}
 			};
 
@@ -456,15 +483,18 @@ public class ServerConnection
 		{
 			Thread t = new Thread()
 			{
-				String message = String.format("P %s %s", username, comment);
+				public void run()
+				{
+					String message = String.format("P %s %s", username, comment);
 
-				Socket socket = new Socket(hostname, port);
-				PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+					Socket socket = new Socket(hostname, port);
+					PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-				out.print(message);
+					out.print(message);
 
-				out.close();
-				socket.close();
+					out.close();
+					socket.close();
+				}
 			};
 			
 			t.start();	
