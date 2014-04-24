@@ -2,14 +2,16 @@ import java.net.*;
 import java.util.*;
 import java.sql.*;
 
-public class Connection
+public class ServerConnection
 {
 	java.sql.Connection connection;
+	String hostname;
+	int port;
 
 	/**
 	 * Create a conection to the tips database
 	 */
-	public Connection()
+	public ServerConnection(String hostname, int port)
 	{
 		String url = "jdbc:mysql://localhost:9312/TIPS";
 		String username = "tips_user";
@@ -18,6 +20,9 @@ public class Connection
 		//Load the SQL driver
 		Class.forName("com.mysql.jdbc.Driver");
 		this.connection = DriverManager.getConnection(url, username, password);
+
+		this.hostname = hostname;
+		this.port = port;
 	}
 
 	/**
