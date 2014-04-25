@@ -10,10 +10,9 @@ import java.util.*;
 
 public class SQLServer
 {
-   final static int port = 9312;
-
-   public static void main(String[] args)
-   {  
+	final static int port = 9312;
+	public static void main(String[] args)
+	{  
 		try
 		{  
 			ServerSocket s = new ServerSocket(port);
@@ -29,25 +28,25 @@ public class SQLServer
 		{  
 			e.printStackTrace();
 		}
-   }
+	}
 }
 
 /**
-   This class handles the client input for one server socket connection. 
+	This class handles the client input for one server socket connection. 
 */
 class ThreadedHandler implements Runnable
 { 
-   final static String ServerUser = "tips_user";
-   final static String ServerPassword = "tips";
-   private Socket incoming;
+	final static String ServerUser = "tips_user";
+	final static String ServerPassword = "tips";
+	private Socket incoming;
 
-   public ThreadedHandler(Socket i)
-   { 
-	  incoming = i; 
-   }
+	public ThreadedHandler(Socket i)
+	{ 
+		incoming = i;
+	}
 
-   public static Connection getConnection() throws SQLException, IOException
-   {
+	public static Connection getConnection() throws SQLException, IOException
+		{
 		Properties props = new Properties();
 		FileInputStream in = new FileInputStream("database.properties");
 		props.load(in);
@@ -59,9 +58,62 @@ class ThreadedHandler implements Runnable
 		String username = props.getProperty("jdbc.username");
 		String password = props.getProperty("jdbc.password");
 
+		try
+		{
+			Class.forName("com.mysql.jdbc.Driver");
+		}
+		catch (ClassNotFoundException e)
+		{
+			e.printStackTrace();
+			System.exit(-1);
+		}
+
 		return DriverManager.getConnection( url, username, password);
-   }
-   
+	}
+
+	/**
+	 * Create a new Tips account
+	 * @param username the username to associate with the account
+	 * @param password the password to associate with the account
+	 * @return the new account's user_id or -1 on failure
+	 */
+	public int createAccount(String username, String password)
+	{
+		try
+		{
+			Connection connection = getConnection();
+			
+			int user_id = -1;
+			
+			String update = "INSERT INTO users (username, password) VALUES(?, ?)";
+			PreparedStatement stat = connection.prepareStatement(update);
+			stat.setString(1, username);
+			stat.setString(2, password);
+
+			stat.executeUpdate();
+			stat.close();
+
+			String query = "SELECT user_id FROM users WHERE username LIKE ?";
+			stat = connection.prepareStatement(query);
+			stat.setString(1, username);
+
+			ResultSet results = stat.executeQuery();
+			if (results.next())
+				user_id = results.getInt("user_id");
+
+			stat.close();
+			results.close();
+			connection.close();
+			
+			return user_id;
+		}
+		catch (Exception e)
+		{
+			return -1;
+		}
+
+	}
+	
 	/**
 	 * Attempt to login with the given username and password
 	 * @param username the username to login with
@@ -123,6 +175,7 @@ class ThreadedHandler implements Runnable
 				int karma = results.getInt("karma");
 				int userID = results.getInt("user_id");
 				String t = String.format("%d|%s|%s|%d|%d", tipID, tip, postDate, karma, userID);
+				System.out.println("Adding " + t);
 				tips.add(t);
 			}
 
@@ -134,6 +187,7 @@ class ThreadedHandler implements Runnable
 		}
 		catch (Exception e)
 		{
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -391,11 +445,12 @@ class ThreadedHandler implements Runnable
 	 */
 	void handleRequest(InputStream inStream, OutputStream outStream)
 	{
-		Scanner in = new Scanner(inStream);         
+		Scanner in = new Scanner(inStream);			
 		PrintWriter out = new PrintWriter(outStream, true);
 
 		// Get parameters of the call
 		String request = in.nextLine();
+		System.out.println("Request: " + request);
 
 		try {
 			// Get arguments.
@@ -403,7 +458,18 @@ class ThreadedHandler implements Runnable
 			String command = request.substring(0, index);
 
 			// Do the operation
-			if (command.equals("login")) //login|username|password
+			if (command.equals("create"))
+			{
+				int start = index + 1;
+				index = request.indexOf("|", start);
+				String username = request.substring(start, index);
+				start = index + 1;
+				String password = request.substring(start);
+				
+				int user_id = createAccount(username, password);
+				out.println(user_id);
+			}
+			if (command.equals("login")) //create|<username>|<password> or login|<username>|<password>
 			{
 				int start = index + 1;
 				index = request.indexOf("|", start);

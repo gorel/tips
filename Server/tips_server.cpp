@@ -13,7 +13,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define DEFAULT_PORT		9313
+#define DEFAULT_PORT		9314
 #define THREAD_POOL_COUNT	5
 #define BUF_SIZE		1024
 #define MAXQUEUE		50
@@ -189,15 +189,13 @@ process_request(int fd)
 
 	//Read which file was requested
 	char readbuf[BUF_SIZE] = "";
-	read(fd, readbuf, BUF_SIZE);
+	int n = read(fd, readbuf, BUF_SIZE);
+	readbuf[n-2] = '\0';
 
 	//Scan the request to parse relevant information
 	type = readbuf[0];
 	while (readbuf[i++] != ' ');
 	filename = readbuf + i;
-	i++;
-	while (readbuf[i] != ' ' && readbuf[i] != '\r' && readbuf[i] != '\n') i++;
-	readbuf[i] = '\0';
 	
 	//Get the content directory
 	getcwd(fullpath, BUF_SIZE);
