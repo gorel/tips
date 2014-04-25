@@ -471,7 +471,6 @@ class ThreadedHandler implements Runnable
 
 		// Get parameters of the call
 		String request = in.nextLine();
-		System.out.println("Request: " + request);
 
 		try {
 			// Get arguments.
@@ -538,7 +537,6 @@ class ThreadedHandler implements Runnable
 			{
 				int start = index + 1;
 				String username = request.substring(start);
-				System.out.println("username=" + username);
 				
 				ArrayList<String> tips = getTipsByUsername(username);
 				if (tips != null)
@@ -575,7 +573,6 @@ class ThreadedHandler implements Runnable
 			}	
 		}
 		catch (Exception e) {
-			System.out.println(e.toString());
 			out.println(e.toString());
 		}
 	}

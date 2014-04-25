@@ -7,9 +7,12 @@ public class ConnectionTest
 		System.out.println("Connecting...");
 		ServerConnection conn = new ServerConnection("data.cs.purdue.edu", 9312, 9314);
 		System.out.println("Connected to database.");
+		ArrayList<Tip> tips;
+		ArrayList<Comment> comments;
 
+		
 		System.out.println("New tips:");
-		ArrayList<Tip> tips = conn.getNewTips(5);
+		tips = conn.getNewTips(5);
 		for (Tip t : tips)
 			System.out.println(t);
 
@@ -23,28 +26,30 @@ public class ConnectionTest
 		tips = conn.getTipsByUsername("god");
 		for (Tip t : tips)
 			System.out.println(t);
+		
 
 		System.out.println("after upvote:");
-		conn.voteTip(1, true);
+		conn.voteTip(3, true);
 		tips = conn.getNewTips(5);
 		for (Tip t : tips)
 			System.out.println(t);
 
+		
 		System.out.println("after downvote:");
-		conn.voteTip(1, false);
+		conn.voteTip(2, false);
 		tips = conn.getNewTips(5);
 		for (Tip t : tips)
 			System.out.println(t);
 
-		/*
+		
 		System.out.println("Comments:");
-		ArrayList<Comment> comments = conn.getCommentsForTip(1);
+		comments = conn.getCommentsForTip(1);
 		for (Comment c : comments)
 			System.out.println(c);
 
 		conn.postTip("Change your oil #car #maintenance", 1);
 
 		conn.postComment(1, "Lol, that's cool", "god");
-		*/
+		
 	}
 }
