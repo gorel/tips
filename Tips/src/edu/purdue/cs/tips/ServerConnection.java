@@ -114,11 +114,11 @@ public class ServerConnection
 			
 			out.println(message);
 
-			while (in.ready())
+			do
 			{
 				int start, pipe;
 				String line = in.readLine();
-				String[] values = line.split("|");
+				String[] values = line.split("\\|");
 				
 				int tipID = Integer.parseInt(values[0]);
 				String tipString = values[1];
@@ -128,7 +128,7 @@ public class ServerConnection
 
 				Tip tip = new Tip(tipID, tipString, postDate, karma, userID);
 				tips.add(tip);
-			}
+			} while (in.ready());
 
 			out.close();
 			socket.close();
@@ -137,6 +137,7 @@ public class ServerConnection
 		}
 		catch (Exception e)
 		{
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -162,11 +163,11 @@ public class ServerConnection
 			
 			out.println(message);
 
-			while (in.ready())
+			do
 			{
 				int start, pipe;
 				String line = in.readLine();
-				String[] values = line.split("|");
+				String[] values = line.split("\\|");
 				
 				int tipID = Integer.parseInt(values[0]);
 				String tipString = values[1];
@@ -176,7 +177,7 @@ public class ServerConnection
 
 				Tip tip = new Tip(tipID, tipString, postDate, karma, userID);
 				tips.add(tip);
-			}
+			} while (in.ready());
 
 			out.close();
 			socket.close();
@@ -185,6 +186,7 @@ public class ServerConnection
 		}
 		catch (Exception e)
 		{
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -208,11 +210,11 @@ public class ServerConnection
 			
 			out.println(message);
 
-			while (in.ready())
+			do
 			{
 				int start, pipe;
 				String line = in.readLine();
-				String[] values = line.split("|");
+				String[] values = line.split("\\|");
 				
 				int tipID = Integer.parseInt(values[0]);
 				String tipString = values[1];
@@ -222,7 +224,7 @@ public class ServerConnection
 
 				Tip tip = new Tip(tipID, tipString, postDate, karma, userID);
 				tips.add(tip);
-			}
+			} while (in.ready());
 
 			out.close();
 			socket.close();
@@ -281,7 +283,7 @@ public class ServerConnection
 			
 			out.println(message);
 
-			while (in.ready())
+			do
 			{
 				int start, pipe;
 				String line = in.readLine();
@@ -297,7 +299,7 @@ public class ServerConnection
 
 				Comment comment = new Comment(name, dateString, commentString);
 				comments.add(comment);
-			}
+			} while (in.ready());
 			
 			socket.close();
 			return comments;

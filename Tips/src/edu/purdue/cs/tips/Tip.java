@@ -42,10 +42,10 @@ public class Tip
 
 	public String toString()
 	{
-		return 	"tipID:\t" + tipID + "\n" +
-			"tip:\t" + tip + "\n" + 
+		return 	"tipID:\t\t" + tipID + "\n" +
+			"tip:\t\t" + tip + "\n" + 
 			"postDate:\t" + postDate + "\n" + 
-			"karma:\t" + karma + "\n" + 
-			"userID:\t" + userID + "\n";
+			"karma:\t\t" + karma + "\n" + 
+			"userID:\t\t" + userID + "\n";
 	}
 }

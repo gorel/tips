@@ -14,14 +14,26 @@ public class SQLServer
 	public static void main(String[] args)
 	{  
 		try
-		{  
+		{
+			Properties props = new Properties();
+			FileInputStream in = new FileInputStream("database.properties");
+			props.load(in);
+			in.close();
+			String drivers = props.getProperty("jdbc.drivers");
+			if (drivers != null)
+				System.setProperty("jdbc.drivers", drivers);
+			String dbport = props.getProperty("jdbc.port");
+			String url = props.getProperty("jdbc.url");
+			String username = props.getProperty("jdbc.username");
+			String password = props.getProperty("jdbc.password");
+
 			ServerSocket s = new ServerSocket(port);
-			System.out.println("Server started on port " + port);
+			System.out.println("Server started on port " + port + " (DB port: " + dbport + ")");
 
 			while (true)
 			{  
 				Socket incoming = s.accept();
-				new Thread(new ThreadedHandler(incoming)).start();
+				new Thread(new ThreadedHandler(incoming, url, username, password)).start();
 			}
 		}
 		catch (IOException e)
@@ -40,24 +52,21 @@ class ThreadedHandler implements Runnable
 	final static String ServerPassword = "tips";
 	private Socket incoming;
 
-	public ThreadedHandler(Socket i)
+	private String url;
+	private String username;
+	private String password;
+
+	public ThreadedHandler(Socket i, String url, String username, String password)
 	{ 
 		incoming = i;
+		this.url = url;
+		this.username = username;
+		this.password = password;
 	}
 
-	public static Connection getConnection() throws SQLException, IOException
-		{
-		Properties props = new Properties();
-		FileInputStream in = new FileInputStream("database.properties");
-		props.load(in);
-		in.close();
-		String drivers = props.getProperty("jdbc.drivers");
-		if (drivers != null)
-			System.setProperty("jdbc.drivers", drivers);
-		String url = props.getProperty("jdbc.url");
-		String username = props.getProperty("jdbc.username");
-		String password = props.getProperty("jdbc.password");
-
+	public Connection getConnection() throws SQLException, IOException
+	{
+	
 		try
 		{
 			Class.forName("com.mysql.jdbc.Driver");
@@ -68,7 +77,7 @@ class ThreadedHandler implements Runnable
 			System.exit(-1);
 		}
 
-		return DriverManager.getConnection( url, username, password);
+		return DriverManager.getConnection(url, username, password);
 	}
 
 	/**
@@ -175,7 +184,6 @@ class ThreadedHandler implements Runnable
 				int karma = results.getInt("karma");
 				int userID = results.getInt("user_id");
 				String t = String.format("%d|%s|%s|%d|%d", tipID, tip, postDate, karma, userID);
-				System.out.println("Adding " + t);
 				tips.add(t);
 			}
 
@@ -187,7 +195,6 @@ class ThreadedHandler implements Runnable
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
 			return null;
 		}
 	}
@@ -276,18 +283,31 @@ class ThreadedHandler implements Runnable
 			Connection connection = getConnection();
 			
 			ArrayList<String> tips = new ArrayList<String>();
-			
-			String query = "SELECT * FROM tips WHERE USERNAME LIKE ?";
+			int userID = -1;
+
+			String query = "SELECT user_id FROM users WHERE username LIKE ?";
 			PreparedStatement stat = connection.prepareStatement(query);
-			
+			stat.setString(1, username);
+
 			ResultSet results = stat.executeQuery();
+
+			while (results.next())
+				userID = results.getInt("user_id");
+
+			stat.close();
+			results.close();
+			
+			query = "SELECT * FROM tips WHERE user_id = ?";
+			stat = connection.prepareStatement(query);
+			stat.setInt(1, userID);
+			
+			results = stat.executeQuery();
 			while (results.next())
 			{
 				int tipID = results.getInt("tip_id");
 				String tip = results.getString("tip");
 				String postDate = results.getString("post_date");
 				int karma = results.getInt("karma");
-				int userID = results.getInt("user_id");
 				String t = String.format("%d|%s|%s|%d|%d", tipID, tip, postDate, karma, userID);
 				tips.add(t);
 			}
@@ -318,9 +338,9 @@ class ThreadedHandler implements Runnable
 			
 			String update;
 			if (upvote)
-				update = "UPDATE tips SET karma = karma + 1 WHERE tipID = ?";
+				update = "UPDATE tips SET karma = karma + 1 WHERE tip_id = ?";
 			else
-				update = "UPDATE tips SET karma = karma - 1 WHERE tipID = ?";
+				update = "UPDATE tips SET karma = karma - 1 WHERE tip_id = ?";
 			PreparedStatement stat = connection.prepareStatement(update);
 			stat.setInt(1, tipID);
 
@@ -332,6 +352,7 @@ class ThreadedHandler implements Runnable
 		}
 		catch (Exception e)
 		{
+			e.printStackTrace();
 			return false;
 		}
 	}
@@ -496,10 +517,10 @@ class ThreadedHandler implements Runnable
 					out.println("null");
 				}
 			}
-			else if (command.equals("GetByTags")) //getByTags|<tag1>,<tag2>,...,<tagN>
+			else if (command.equals("getByTags")) //getByTags|<tag1>,<tag2>,...,<tagN>
 			{
 				int start = index + 1;
-				String[] tags = request.substring(request.indexOf("|", start)).split(",");
+				String[] tags = request.substring(start).split(",");
 				
 				ArrayList<String> tips = getTipsByTags(tags);
 
@@ -513,10 +534,11 @@ class ThreadedHandler implements Runnable
 					out.println("null");
 				}
 			}
-			else if (command.equals("GetByName")) //getByName|<username>
+			else if (command.equals("getByName")) //getByName|<username>
 			{
 				int start = index + 1;
-				String username = request.substring(request.indexOf("|", start));
+				String username = request.substring(start);
+				System.out.println("username=" + username);
 				
 				ArrayList<String> tips = getTipsByUsername(username);
 				if (tips != null)
