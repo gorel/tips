@@ -4,7 +4,7 @@ import java.util.*;
 
 public class ConnectionTest
 {
-	public static void main(String args)
+	public static void main(String[] args)
 	{
 		ServerConnection conn = new ServerConnection("data.cs.purdue.edu", 9313);
 		ArrayList<Tip> tips = conn.getNewTips(5);
