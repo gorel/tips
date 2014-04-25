@@ -21,6 +21,44 @@ public class ServerConnection
 	}
 
 	/**
+	 * Try to create an account with the given username and password
+	 * @param username the username to assoicate with the account
+	 * @param password the password to associate with the account
+	 * @return the new account's user_id or -1 on failure
+	 */
+	public int createAccount(String username, String password)
+	{
+		try
+		{
+			int userID = -1;
+			
+			String message = String.format("create|%s|%s", username, password);
+
+			Socket socket = new Socket(hostname, tipsPort);
+			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			
+			out.println(message);
+
+			while (in.ready())
+			{
+				String line = in.readLine();
+				userID = Integer.parseInt(line);
+			}
+
+			out.close();
+			socket.close();
+			
+			return userID;
+		}
+		catch (Exception e)
+		{
+			return -1;
+		}
+
+	}
+
+	/**
 	 * Attempt to login with the given username and password
 	 * @param username the username to login with
 	 * @param password the password to login with
