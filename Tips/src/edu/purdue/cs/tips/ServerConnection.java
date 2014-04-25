@@ -1,5 +1,3 @@
-package edu.purdue.cs.tips;
-
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -9,36 +7,17 @@ public class ServerConnection
 {
 	java.sql.Connection connection;
 	String hostname;
-	int port;
+	int tipsPort;
+	int commentsPort;
 
 	/**
-	 * Create a conection to the tips database
+	 * Create a connection to the tips database
 	 */
-	public ServerConnection(String hostname, int port)
+	public ServerConnection(String hostname, int tipsPort, int commentsPort)
 	{
-		String url = "jdbc:mysql://localhost:9312/TIPS";
-		String username = "tips_user";
-		String password = "tips";
-
-		//Load the SQL driver
-		try
-		{
-			Class.forName("com.mysql.jdbc.Driver");
-			this.connection = DriverManager.getConnection(url, username, password);
-
-			this.hostname = hostname;
-			this.port = port;
-		}
-		catch (ClassNotFoundException e)
-		{
-			System.out.println("Error: Could not load mySQL driver.");
-			System.exit(-1);
-		}
-		catch (SQLException e)
-		{
-			System.out.println("Error: Could not connect to mySQL database.");
-			System.exit(-1);
-		}
+		this.hostname = hostname;
+		this.tipsPort = tipsPort;
+		this.commentsPort = commentsPort;
 	}
 
 	/**
@@ -47,25 +26,30 @@ public class ServerConnection
 	 * @param password the password to login with
 	 * @return the user's user_id, or -1 on failure
 	 */
-	public int login(final String username, final String password)
+	public int login(String username, String password)
 	{
 		try
 		{
-			int user_id = -1;
+			int userID = -1;
 			
-			String query = "SELECT user_id FROM users WHERE username LIKE ? AND password LIKE ?";
-			PreparedStatement stat = connection.prepareStatement(query);
-			stat.setString(1, username);
-			stat.setString(2, password);
+			String message = String.format("login|%s|%s", username, password);
 
-			ResultSet results = stat.executeQuery();
-			if (results.next())
-				user_id = results.getInt("user_id");
+			Socket socket = new Socket(hostname, tipsPort);
+			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			
+			out.println(message);
 
-			stat.close();
-			results.close();
+			while (in.ready())
+			{
+				String line = in.readLine();
+				userID = Integer.parseInt(line);
+			}
 
-			return user_id;
+			out.close();
+			socket.close();
+			
+			return userID;
 		}
 		catch (Exception e)
 		{
@@ -76,7 +60,7 @@ public class ServerConnection
 	/**
 	 * Load up to <limit> new tips from the Tips database.
 	 * @param limit the maximum number of tips to load
-	 * @return an ArrayList of Tips matchin the given criteria
+	 * @return an ArrayList of Tips matching the given criteria
 	 */
 	public ArrayList<Tip> getNewTips(final int limit)
 	{
@@ -84,25 +68,33 @@ public class ServerConnection
 		{
 			ArrayList<Tip> tips = new ArrayList<Tip>();
 			
-			String query = "SELECT * FROM tips ORDER BY post_date LIMIT ?";
-			PreparedStatement stat = connection.prepareStatement(query);
-			stat.setInt(1, limit);
+			String message = String.format("getNew|%d", limit);
 
-			ResultSet results = stat.executeQuery();
-			while (results.next())
+			Socket socket = new Socket(hostname, tipsPort);
+			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			
+			out.println(message);
+
+			while (in.ready())
 			{
-				int tipID = results.getInt("tip_id");
-				String tip = results.getString("tip");
-				String postDate = results.getString("post_date");
-				int karma = results.getInt("karma");
-				int userID = results.getInt("user_id");
-				Tip t = new Tip(tipID, tip, postDate, karma, userID);
-				tips.add(t);
+				int start, pipe;
+				String line = in.readLine();
+				String[] values = line.split("|");
+				
+				int tipID = Integer.parseInt(values[0]);
+				String tipString = values[1];
+				String postDate = values[2];
+				int karma = Integer.parseInt(values[3]);
+				int userID = Integer.parseInt(values[4]);
+
+				Tip tip = new Tip(tipID, tipString, postDate, karma, userID);
+				tips.add(tip);
 			}
 
-			stat.close();
-			results.close();
-
+			out.close();
+			socket.close();
+			
 			return tips;
 		}
 		catch (Exception e)
@@ -120,58 +112,37 @@ public class ServerConnection
 	{
 		try
 		{
-			TreeSet<Integer> tipIDs = new TreeSet<Integer>();
 			ArrayList<Tip> tips = new ArrayList<Tip>();
-
-			String query = "SELECT tip_id FROM tags WHERE tag LIKE ?";
-			PreparedStatement stat = connection.prepareStatement(query);
-			stat.setString(1, tags[0]);
-
-			ResultSet results = stat.executeQuery();
-			while (results.next())
-				tipIDs.add(results.getInt("tip_id"));
-
-			stat.close();
-			results.close();
-
+			
+			String message = String.format("getByTags|%s", tags[0]);
 			for (int i = 1; i < tags.length; i++)
+				message += "," + tags[i];
+
+			Socket socket = new Socket(hostname, tipsPort);
+			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			
+			out.println(message);
+
+			while (in.ready())
 			{
-				ArrayList<Integer> intersection = new ArrayList<Integer>();
-				stat = connection.prepareStatement(query);
-				stat.setString(1, tags[i]);
+				int start, pipe;
+				String line = in.readLine();
+				String[] values = line.split("|");
 				
-				results = stat.executeQuery();
-				while (results.next())
-					intersection.add(results.getInt("tip_id"));
+				int tipID = Integer.parseInt(values[0]);
+				String tipString = values[1];
+				String postDate = values[2];
+				int karma = Integer.parseInt(values[3]);
+				int userID = Integer.parseInt(values[4]);
 
-				stat.close();
-				results.close();
-
-				tipIDs.retainAll(intersection);
+				Tip tip = new Tip(tipID, tipString, postDate, karma, userID);
+				tips.add(tip);
 			}
 
-			for (Integer id : tipIDs)
-			{
-				query = "SELECT * FROM tips WHERE tip_id = ?";
-				stat = connection.prepareStatement(query);
-				stat.setInt(1, id.intValue());
-
-				results = stat.executeQuery();
-				while (results.next())
-				{
-					int tipID = results.getInt("tip_id");
-					String tip = results.getString("tip");
-					String postDate = results.getString("post_date");
-					int karma = results.getInt("karma");
-					int userID = results.getInt("user_id");
-					Tip t = new Tip(tipID, tip, postDate, karma, userID);
-					tips.add(t);
-				}
-
-				stat.close();
-				results.close();
-			}
-
+			out.close();
+			socket.close();
+			
 			return tips;
 		}
 		catch (Exception e)
@@ -186,29 +157,38 @@ public class ServerConnection
 	 * @return an ArrayList of Tips matching the given criteria
 	 */
 	public ArrayList<Tip> getTipsByUsername(final String username)
-	{
+	{		
 		try
 		{
 			ArrayList<Tip> tips = new ArrayList<Tip>();
 			
-			String query = "SELECT * FROM tips WHERE USERNAME LIKE ?";
-			PreparedStatement stat = connection.prepareStatement(query);
+			String message = String.format("getByName|%s", username);
+
+			Socket socket = new Socket(hostname, tipsPort);
+			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			
-			ResultSet results = stat.executeQuery();
-			while (results.next())
+			out.println(message);
+
+			while (in.ready())
 			{
-				int tipID = results.getInt("tip_id");
-				String tip = results.getString("tip");
-				String postDate = results.getString("post_date");
-				int karma = results.getInt("karma");
-				int userID = results.getInt("user_id");
-				Tip t = new Tip(tipID, tip, postDate, karma, userID);
-				tips.add(t);
+				int start, pipe;
+				String line = in.readLine();
+				String[] values = line.split("|");
+				
+				int tipID = Integer.parseInt(values[0]);
+				String tipString = values[1];
+				String postDate = values[2];
+				int karma = Integer.parseInt(values[3]);
+				int userID = Integer.parseInt(values[4]);
+
+				Tip tip = new Tip(tipID, tipString, postDate, karma, userID);
+				tips.add(tip);
 			}
 
-			stat.close();
-			results.close();
-
+			out.close();
+			socket.close();
+			
 			return tips;
 		}
 		catch (Exception e)
@@ -218,45 +198,25 @@ public class ServerConnection
 	}
 
 	/**
-	 * Give the given tip an upvote!
-	 * @param tipID the tip to upvote
+	 * Give the given tip an upvote or downvote
+	 * @param tipID the tip to upvote/downvote
+	 * @param upvote whether or not this vote is an upvote (vs. a downvote)
 	 * @return a boolean flag if the vote was successfully posted
 	 */
-	public boolean upvoteTip(final int tipID)
-	{
+	public boolean voteTip(final int tipID, boolean upvote)
+	{	
 		try
 		{
-			String update = "UPDATE tips SET karma = karma + 1 WHERE tipID = ?";
-			PreparedStatement stat = connection.prepareStatement(update);
-			stat.setInt(1, tipID);
+			String message = String.format("voteTip|%d|%c", tipID, upvote ? '+' : '-');
 
-			stat.executeUpdate();
-			stat.close();
+			Socket socket = new Socket(hostname, tipsPort);
+			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-			return true;
-		}
-		catch (Exception e)
-		{
-			return false;
-		}
-	}
+			out.println(message);
 
-	/**
-	 * Give the given tip a downvote :(
-	 * @param tipID the tip to downvote
-	 * @return a boolean flag if the vote was successfully posted
-	 */
-	public boolean downvoteTip(final int tipID)
-	{
-		try
-		{
-			String update = "UPDATE tips SET karma = karma - 1 WHERE tipID = ?";
-			PreparedStatement stat = connection.prepareStatement(update);
-			stat.setInt(1, tipID);
+			out.close();
+			socket.close();
 
-			stat.executeUpdate();
-			stat.close();
-			
 			return true;
 		}
 		catch (Exception e)
@@ -277,8 +237,11 @@ public class ServerConnection
 			ArrayList<Comment> comments = new ArrayList<Comment>();
 			String message = String.format("G %d", tipID);
 
-			Socket socket = new Socket(hostname, port);
+			Socket socket = new Socket(hostname, commentsPort);
+			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			
+			out.println(message);
 
 			while (in.ready())
 			{
@@ -297,7 +260,8 @@ public class ServerConnection
 				Comment comment = new Comment(name, dateString, commentString);
 				comments.add(comment);
 			}
-
+			
+			socket.close();
 			return comments;
 		}
 		catch (Exception e)
@@ -308,90 +272,24 @@ public class ServerConnection
 	}
 
 	/**
-	 * Retrieve the tags from the given tip
-	 * @param tip the tip to parse
-	 * @return an array of tags for the given tip
-	 */
-	private ArrayList<String> getTags(String tip)
-	{
-		ArrayList<String> tags = new ArrayList<String>();
-
-		String[] words = tip.split(" ");
-		for (String word : words)
-		{
-			if (word.charAt(0) == '#')
-			{
-				int end = 1;
-				while (end < word.length() && Character.isLetter(word.charAt(end)))
-					end++;
-
-				if (end > 1)
-					tags.add(word.substring(1, end));
-			}
-		}
-
-		return tags;
-	}
-
-	/**
 	 * Post a new tip to the server
 	 * @param tip the tip to post to the server
 	 * @param userID the userID of the posting user
 	 * @return a boolean flag if the tip was successfully posted
 	 */
 	public boolean postTip(String tip, int userID)
-	{
+	{		
 		try
 		{
-			ArrayList<String> tags = getTags(tip);
+			String message = String.format("postTip|%d|%s", userID, tip);
 
-			String update = "INSERT INTO tips (tip, user_id) VALUES (?, ?)";
-			PreparedStatement stat = connection.prepareStatement(update);
-			stat.setString(1, tip);
-			stat.setInt(2, userID);
-			stat.executeUpdate();
-			stat.close();
-			
-			return updateTags(tip, tags);
-		}
-		catch(Exception e)
-		{
-			return false;
-		}
-	}
+			Socket socket = new Socket(hostname, tipsPort);
+			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-	/**
-	 * Associate the given tags with the tip
-	 * @param tip the tip to associate the tags to
-	 * @param tags the tags to assign to the tip
-	 * @return a boolean flag if the tags were successfully posted
-	 */
-	private boolean updateTags(String tip, ArrayList<String> tags)
-	{
-		try
-		{
-			int tip_id;
-			
-			String query = "SELECT tip_id FROM tips WHERE tip LIKE ?";
-			String update = "INSERT INTO tags (tag) VALUES(?)";
+			out.println(message);
 
-			PreparedStatement stat = connection.prepareStatement(query);
-			stat.setString(1, tip);
-			
-			ResultSet id_results = stat.executeQuery();
-			id_results.next();
-			tip_id = id_results.getInt("tip_id");
-
-			stat.close();
-			id_results.close();
-
-			for (String tag : tags)
-			{
-				PreparedStatement stat2 = connection.prepareStatement(update);
-				stat2.setString(1, tag);
-				stat.executeUpdate();
-				stat.close();
-			}
+			out.close();
+			socket.close();
 
 			return true;
 		}
@@ -412,12 +310,12 @@ public class ServerConnection
 	{
 		try
 		{
-			String message = String.format("P %s %s", username, comment);
+			String message = String.format("P %d %s %s", tipID, username, comment);
 
-			Socket socket = new Socket(hostname, port);
+			Socket socket = new Socket(hostname, commentsPort);
 			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-			out.print(message);
+			out.println(message);
 
 			out.close();
 			socket.close();

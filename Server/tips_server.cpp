@@ -195,6 +195,9 @@ process_request(int fd)
 	type = readbuf[0];
 	while (readbuf[i++] != ' ');
 	filename = readbuf + i;
+	i++;
+	while (readbuf[i] != ' ' && readbuf[i] != '\r' && readbuf[i] != '\n') i++;
+	readbuf[i] = '\0';
 	
 	//Get the content directory
 	getcwd(fullpath, BUF_SIZE);

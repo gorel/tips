@@ -1,12 +1,12 @@
-package edu.purdue.cs.tips;
-
 import java.util.*;
 
 public class ConnectionTest
 {
 	public static void main(String[] args)
 	{
-		ServerConnection conn = new ServerConnection("data.cs.purdue.edu", 9313);
+		System.out.println("Connecting...");
+		ServerConnection conn = new ServerConnection("data.cs.purdue.edu", 9314);
+		System.out.println("Connected to database.");
 		ArrayList<Tip> tips = conn.getNewTips(5);
 		for (Tip t : tips)
 			System.out.println(t);

@@ -1,5 +1,3 @@
-package edu.purdue.cs.tips;
-
 public class Comment
 {
 	private String poster;

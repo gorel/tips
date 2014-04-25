@@ -1,7 +1,3 @@
-package edu.purdue.cs.tips;
-
-import java.util.Date;
-
 public class Tip
 {
 	private int tipID;
