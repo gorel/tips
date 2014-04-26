@@ -2,7 +2,10 @@ CXX= g++ -fPIC
 NETLIBS= -lnsl
 CFLAGS= -Wall -Werror -pedantic -g
 
-all: tips_server test_client
+all: tips_server test_client SQLServer
+
+SQLServer: SQLServer.java
+	javac SQLServer.java
 
 tips_server: tips_server.o
 	$(CXX) -o $@ $@.o $(NETLIBS) $(CFLAGS) -lpthread

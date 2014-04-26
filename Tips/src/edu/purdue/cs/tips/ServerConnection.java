@@ -1,8 +1,15 @@
+package edu.purdue.cs.tips;
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.sql.*;
 
+/**
+ * This class is an API to the Tips servers
+ * It includes all functionality that should be required for server communication
+ * @author Logan Gore
+ */
 public class ServerConnection
 {
 	java.sql.Connection connection;
@@ -12,6 +19,9 @@ public class ServerConnection
 
 	/**
 	 * Create a connection to the tips database
+	 * @param hostname the hostname to connect to
+	 * @param tipsPort the port the tips server is running on
+	 * @param commentsPort the port the comments server is running on
 	 */
 	public ServerConnection(String hostname, int tipsPort, int commentsPort)
 	{
