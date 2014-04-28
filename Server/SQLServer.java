@@ -92,7 +92,7 @@ class ThreadedHandler implements Runnable
 		{
 			Connection connection = getConnection();
 			
-			int user_id = -1;
+			int user_id = -2;
 			
 			String update = "INSERT INTO users (username, password) VALUES(?, ?)";
 			PreparedStatement stat = connection.prepareStatement(update);
