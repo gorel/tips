@@ -3,7 +3,7 @@ package edu.purdue.cs.tips;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import android.util.Log;
+import java.sql.*;
 
 /**
  * This class is an API to the Tips servers
@@ -50,11 +50,11 @@ public class ServerConnection
 			
 			out.println(message);
 
-			do
+			while (in.ready())
 			{
 				String line = in.readLine();
 				userID = Integer.parseInt(line);
-			} while (in.ready());
+			}
 
 			out.close();
 			socket.close();
@@ -63,9 +63,9 @@ public class ServerConnection
 		}
 		catch (Exception e)
 		{
-			Log.e(e.getClass().getName(), e.getMessage(), e);
 			return -1;
 		}
+
 	}
 
 	/**
@@ -88,11 +88,11 @@ public class ServerConnection
 			
 			out.println(message);
 
-			do
+			while (in.ready())
 			{
 				String line = in.readLine();
 				userID = Integer.parseInt(line);
-			} while (in.ready());
+			}
 
 			out.close();
 			socket.close();
@@ -101,7 +101,6 @@ public class ServerConnection
 		}
 		catch (Exception e)
 		{
-			Log.e(e.getClass().getName(), e.getMessage(), e);
 			return -1;
 		}
 	}
@@ -127,6 +126,7 @@ public class ServerConnection
 
 			do
 			{
+				int start, pipe;
 				String line = in.readLine();
 				String[] values = line.split("\\|");
 				
@@ -147,7 +147,7 @@ public class ServerConnection
 		}
 		catch (Exception e)
 		{
-			Log.e(e.getClass().getName(), e.getMessage(), e);
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -175,6 +175,7 @@ public class ServerConnection
 
 			do
 			{
+				int start, pipe;
 				String line = in.readLine();
 				String[] values = line.split("\\|");
 				
@@ -195,7 +196,7 @@ public class ServerConnection
 		}
 		catch (Exception e)
 		{
-			Log.e(e.getClass().getName(), e.getMessage(), e);
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -221,6 +222,7 @@ public class ServerConnection
 
 			do
 			{
+				int start, pipe;
 				String line = in.readLine();
 				String[] values = line.split("\\|");
 				
@@ -241,7 +243,6 @@ public class ServerConnection
 		}
 		catch (Exception e)
 		{
-			Log.e(e.getClass().getName(), e.getMessage(), e);
 			return null;
 		}
 	}
@@ -270,7 +271,6 @@ public class ServerConnection
 		}
 		catch (Exception e)
 		{
-			Log.e(e.getClass().getName(), e.getMessage(), e);
 			return false;
 		}
 	}
@@ -316,7 +316,6 @@ public class ServerConnection
 		}
 		catch (Exception e)
 		{
-			Log.e(e.getClass().getName(), e.getMessage(), e);
 			return null;
 		}
 
@@ -346,7 +345,6 @@ public class ServerConnection
 		}
 		catch (Exception e)
 		{
-			Log.e(e.getClass().getName(), e.getMessage(), e);
 			return false;
 		}
 	}
@@ -376,7 +374,6 @@ public class ServerConnection
 		}
 		catch (Exception e)
 		{
-			Log.e(e.getClass().getName(), e.getMessage(), e);
 			return false;
 		}
 	}
