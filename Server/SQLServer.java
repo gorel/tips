@@ -113,7 +113,7 @@ class ThreadedHandler implements Runnable
 			stat.close();
 			results.close();
 			connection.close();
-			
+
 			return user_id;
 		}
 		catch (Exception e)
@@ -149,7 +149,7 @@ class ThreadedHandler implements Runnable
 			stat.close();
 			results.close();
 			connection.close();
-			
+
 			return user_id;
 		}
 		catch (Exception e)
@@ -471,6 +471,7 @@ class ThreadedHandler implements Runnable
 
 		// Get parameters of the call
 		String request = in.nextLine();
+		System.out.println("New request: " + request);
 
 		try {
 			// Get arguments.
