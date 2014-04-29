@@ -2,16 +2,22 @@ package edu.purdue.cs.tips;
 
 import android.support.v7.app.*;
 import android.support.v4.app.*;
+import android.content.Context;
 import android.os.*;
 import android.util.Log;
 import android.view.*;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
+
+import java.security.*;
 import java.util.ArrayList;
 import java.util.concurrent.*;
 
 public class MainActivity extends ActionBarActivity {
 	private ServerConnection conn;
 	private ExecutorService service;
+	
+	private MessageDigest hasher;
 	private String username;
 	private int userID;
 
@@ -24,9 +30,30 @@ public class MainActivity extends ActionBarActivity {
 			getSupportFragmentManager().beginTransaction().add(R.id.container, new LoginFragment()).commit();
 		}
 		
+		try {
+			hasher = MessageDigest.getInstance("SHA-1");
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
 		
 		conn = new ServerConnection("data.cs.purdue.edu", 9312, 9314);
 		service = Executors.newFixedThreadPool(1);
+	}
+	
+	/**
+	 * Get the SHA-1 hash of s
+	 * @param s the string to hash
+	 * @return a hashed string
+	 */
+	public String hash(String s) {
+		hasher.update(s.getBytes());
+		byte[] bytes = hasher.digest();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < bytes.length; i++) {
+			sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+		}
+		
+		return sb.toString();
 	}
 
 	@Override
@@ -67,6 +94,14 @@ public class MainActivity extends ActionBarActivity {
 			registerButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					try {
+						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+					} catch (Exception e) {
+						//TODO: Why is this happening?
+						Log.e(e.getClass().getName(), e.getMessage(), e);
+					}
+					
 					TextView statusText = (TextView)rootView.findViewById(R.id.status); 
 					statusText.setVisibility(View.GONE);
 					
@@ -76,7 +111,6 @@ public class MainActivity extends ActionBarActivity {
 					RegisterFragment fragment = new RegisterFragment();
 					fragment.setUsername(username);
 					transaction.replace(R.id.container, fragment);
-					transaction.addToBackStack(null);
 					transaction.commit();
 				}
 			});
@@ -85,6 +119,14 @@ public class MainActivity extends ActionBarActivity {
 			loginButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					try {
+						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+					} catch (Exception e) {
+						//TODO: Why is this happening?
+						Log.e(e.getClass().getName(), e.getMessage(), e);
+					}
+					
 					TextView statusText = (TextView)rootView.findViewById(R.id.status);
 					statusText.setVisibility(View.GONE);
 					
@@ -139,6 +181,14 @@ public class MainActivity extends ActionBarActivity {
 			registerButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					try {
+						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+					} catch (Exception e) {
+						//TODO: Why is this happening?
+						Log.e(e.getClass().getName(), e.getMessage(), e);
+					}
+					
 					TextView statusText = (TextView)rootView.findViewById(R.id.status); 
 					statusText.setVisibility(View.GONE);
 					
@@ -195,6 +245,14 @@ public class MainActivity extends ActionBarActivity {
 			searchUsernameButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					try {
+						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+					} catch (Exception e) {
+						//TODO: Why is this happening?
+						Log.e(e.getClass().getName(), e.getMessage(), e);
+					}
+					
 					Log.d("help", "Search by username clicked!");
 					String username = ((EditText)rootView.findViewById(R.id.search_by_username)).getText().toString();
 					ArrayList<Tip> tips = ((MainActivity)getActivity()).getTipsByUsername(username);
@@ -206,6 +264,14 @@ public class MainActivity extends ActionBarActivity {
 			searchTagsButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					try {
+						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+					} catch (Exception e) {
+						//TODO: Why is this happening?
+						Log.e(e.getClass().getName(), e.getMessage(), e);
+					}
+					
 					Log.d("help", "Search by tags clicked!");
 					String[] tags = ((EditText)rootView.findViewById(R.id.search_by_tags)).getText().toString().replaceAll("#", "").split(" ");
 					ArrayList<Tip> tips = ((MainActivity)getActivity()).getTipsByTags(tags);
@@ -217,6 +283,14 @@ public class MainActivity extends ActionBarActivity {
 			postTipButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					try {
+						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+					} catch (Exception e) {
+						//TODO: Why is this happening?
+						Log.e(e.getClass().getName(), e.getMessage(), e);
+					}
+					
 					FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
 					transaction.replace(R.id.container, new PostTipFragment());
 					transaction.addToBackStack(null);
@@ -272,6 +346,14 @@ public class MainActivity extends ActionBarActivity {
 			postCommentButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					try{
+						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+					} catch (Exception e){
+						//TODO: Why is this happening?
+						Log.e(e.getClass().getName(), e.getMessage(), e);
+					}
+					
 					Log.d("help", "Post comment clicked!");
 					FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
 					PostCommentFragment fragment = new PostCommentFragment(tipID);
@@ -325,6 +407,14 @@ public class MainActivity extends ActionBarActivity {
 			postTipButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					try {
+						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+					} catch (Exception e) {
+						//TODO: Why is this happening?
+						Log.e(e.getClass().getName(), e.getMessage(), e);
+					}
+					
 					Log.d("help", "Post tip clicked!");
 					((MainActivity)getActivity()).postTip(tipInput.getText().toString());
 					getFragmentManager().popBackStackImmediate();
@@ -335,6 +425,14 @@ public class MainActivity extends ActionBarActivity {
 			backButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					try {
+						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+					} catch (Exception e) {
+						//TODO: Why is this happening?
+						Log.e(e.getClass().getName(), e.getMessage(), e);
+					}
+					
 					Log.d("help", "Back button clicked!");
 					getFragmentManager().popBackStackImmediate();
 				}
@@ -366,6 +464,14 @@ public class MainActivity extends ActionBarActivity {
 			postCommentButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					try {
+						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+					} catch (Exception e) {
+						//TODO: Why is this happening?
+						Log.e(e.getClass().getName(), e.getMessage(), e);
+					}
+					
 					Log.d("help", "Post comment clicked!");
 					((MainActivity)getActivity()).postComment(tipID, commentInput.getText().toString());
 					getFragmentManager().popBackStackImmediate();
@@ -376,6 +482,14 @@ public class MainActivity extends ActionBarActivity {
 			backButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					try {
+						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+					} catch (Exception e) {
+						//TODO: Why is this happening?
+						Log.e(e.getClass().getName(), e.getMessage(), e);
+					}
+					
 					Log.d("help", "Back button clicked!");
 					getFragmentManager().popBackStackImmediate();
 				}
@@ -392,9 +506,10 @@ public class MainActivity extends ActionBarActivity {
 	 * @return the new account's user_id
 	 */
 	public int createAccount(final String username, final String password) {
+		final String hashedPassword = hash(password);
 		Future<Integer> task = service.submit(new Callable<Integer>(){
 			public Integer call() {
-				return conn.createAccount(username, password);
+				return conn.createAccount(username, hashedPassword);
 			}
 		});
 		
@@ -420,9 +535,10 @@ public class MainActivity extends ActionBarActivity {
 	 * @return the user's user_id
 	 */
 	public int login(final String username, final String password) {
+		final String hashedPassword = hash(password);
 		Future<Integer> task = service.submit(new Callable<Integer>(){
 			public Integer call() {
-				return conn.login(username, password);
+				return conn.login(username, hashedPassword);
 			}
 		});
 		
