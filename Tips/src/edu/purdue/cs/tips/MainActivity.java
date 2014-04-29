@@ -1,17 +1,11 @@
 package edu.purdue.cs.tips;
 
 import android.support.v7.app.*;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.*;
 import android.os.*;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.*;
-
 import java.util.ArrayList;
 import java.util.concurrent.*;
 
@@ -56,6 +50,7 @@ public class MainActivity extends ActionBarActivity {
 
 	/**
 	 * A login fragment containing a simple view.
+	 * @author Evan Arnold
 	 */
 	public static class LoginFragment extends Fragment {
 		public LoginFragment() {
@@ -76,18 +71,13 @@ public class MainActivity extends ActionBarActivity {
 					statusText.setVisibility(View.GONE);
 					
 					String username = ((EditText)rootView.findViewById(R.id.username_input)).getText().toString();
-					String password = ((EditText)rootView.findViewById(R.id.password_input)).getText().toString();
-					int status = ((MainActivity) getActivity()).createAccount(username, password);
 					
-					statusText.setVisibility(View.VISIBLE);
-					if (status == -1)
-						statusText.setText("There was an error :(");
-					else {
-						FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
-						transaction.replace(R.id.container, new TipsViewFragment());
-						transaction.addToBackStack(null);
-						transaction.commit();
-					}
+					FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+					RegisterFragment fragment = new RegisterFragment();
+					fragment.setUsername(username);
+					transaction.replace(R.id.container, fragment);
+					transaction.addToBackStack(null);
+					transaction.commit();
 				}
 			});
 			
@@ -110,7 +100,6 @@ public class MainActivity extends ActionBarActivity {
 					else {
 						FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
 						transaction.replace(R.id.container, new TipsViewFragment());
-						transaction.addToBackStack(null);
 						transaction.commit();
 					}
 				}
@@ -120,6 +109,71 @@ public class MainActivity extends ActionBarActivity {
 		}
 	}
 	
+	/**
+	 * A register fragment containing a simple view
+	 * @author Evan Arnold
+	 *
+	 */
+	public static class RegisterFragment extends Fragment {
+		private String username;
+		
+		public RegisterFragment() {
+			username = null;
+		}
+		
+		public void setUsername(String username) {
+			this.username = username;
+		}
+
+		@Override
+		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+			final View rootView = inflater.inflate(R.layout.fragment_register, container, false);
+			
+			if (username != null) {
+				((EditText)rootView.findViewById(R.id.username_input)).setText(username);
+			}
+
+			Button registerButton = (Button)rootView.findViewById(R.id.register_button);
+			
+			//Create a listener for the register button
+			registerButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					TextView statusText = (TextView)rootView.findViewById(R.id.status); 
+					statusText.setVisibility(View.GONE);
+					
+					String username = ((EditText)rootView.findViewById(R.id.username_input)).getText().toString();
+					String password = ((EditText)rootView.findViewById(R.id.password_input)).getText().toString();
+					String confirm  = ((EditText)rootView.findViewById(R.id.confirm_password_input)).getText().toString();
+					
+					statusText.setVisibility(View.VISIBLE);
+					
+					if (!password.equals(confirm)) {
+						statusText.setText("Passwords do not match");
+						return;
+					}
+					
+					int status = ((MainActivity) getActivity()).createAccount(username, password);
+					
+					if (status == -1)
+						statusText.setText("No server response");
+					else {
+						FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+						transaction.replace(R.id.container, new TipsViewFragment());
+						transaction.commit();
+					}
+				}
+			});
+			
+			return rootView;
+		}
+	}
+	
+	/**
+	 * A tips view fragment containing a simple view
+	 * @author Evan Arnold
+	 *
+	 */
 	public static class TipsViewFragment extends Fragment {
 		private final int TIPLIMIT = 25;
 		private LinearLayout tipsView;
@@ -141,6 +195,7 @@ public class MainActivity extends ActionBarActivity {
 			searchUsernameButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					Log.d("help", "Search by username clicked!");
 					String username = ((EditText)rootView.findViewById(R.id.search_by_username)).getText().toString();
 					ArrayList<Tip> tips = ((MainActivity)getActivity()).getTipsByUsername(username);
 					loadTips(tips);
@@ -151,6 +206,7 @@ public class MainActivity extends ActionBarActivity {
 			searchTagsButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					Log.d("help", "Search by tags clicked!");
 					String[] tags = ((EditText)rootView.findViewById(R.id.search_by_tags)).getText().toString().replaceAll("#", "").split(" ");
 					ArrayList<Tip> tips = ((MainActivity)getActivity()).getTipsByTags(tags);
 					loadTips(tips);
@@ -161,7 +217,10 @@ public class MainActivity extends ActionBarActivity {
 			postTipButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					//TODO Load a "post tip" page or create a dialog or something
+					FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+					transaction.replace(R.id.container, new PostTipFragment());
+					transaction.addToBackStack(null);
+					transaction.commit();
 				}
 			});
 			
@@ -175,8 +234,8 @@ public class MainActivity extends ActionBarActivity {
 		 * Load the ArrayList of tips into the view
 		 * @param tips the list of tips to load
 		 */
-		private void loadTips(ArrayList<Tip> tips) {
-			tipsView.removeAllViews();
+		private void loadTips(ArrayList<Tip> tips) {	
+			//TODO: Remove old tips
 			if (tips == null) {
 				Log.d("help", "Tips returned null!");
 				tipsView.addView(TipView.noResultsView(getActivity().getApplicationContext()));
@@ -184,8 +243,145 @@ public class MainActivity extends ActionBarActivity {
 			}
 			
 			for (Tip tip : tips) {
-				tipsView.addView(tip.toView(getActivity().getApplicationContext()).display());
+				tipsView.addView(tip.toView(getActivity().getApplicationContext(), (MainActivity)getActivity()).display());
 			}
+		}
+	}
+
+	/**
+	 * A comments view fragment containing a simple view
+	 * @author Evan Arnold
+	 */
+	public static class CommentsViewFragment extends Fragment {
+		private LinearLayout commentsView;
+		private int tipID;
+		
+		public CommentsViewFragment(int tipID) {
+			this.tipID = tipID;
+		}
+
+		@Override
+		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+			final View rootView = inflater.inflate(R.layout.fragment_comment_view, container, false);
+			
+			commentsView = (LinearLayout)rootView.findViewById(R.id.comments_view);
+			
+			Button postCommentButton = (Button)rootView.findViewById(R.id.post_comment_button);
+			
+			//Create a listener for the post comment button
+			postCommentButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Log.d("help", "Post comment clicked!");
+					FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+					PostCommentFragment fragment = new PostCommentFragment(tipID);
+					transaction.replace(R.id.container, fragment);
+					transaction.addToBackStack(null);
+					transaction.commit();
+				}
+			});
+			
+			ArrayList<Comment> comments = ((MainActivity)getActivity()).getCommentsForTip(tipID);
+			loadComments(comments);
+			
+			return rootView;
+		}
+	
+		/**
+		 * Load the ArrayList of comments into the view
+		 * @param comments the list of comments to load
+		 */
+		private void loadComments(ArrayList<Comment> comments) {
+			if (comments == null) {
+				Log.d("help", "Comments returned null!");
+				commentsView.addView(CommentView.noResultsView(getActivity().getApplicationContext()));
+				return;
+			}
+			
+			for (Comment comment : comments) {
+				Log.d("help", "Loading comment: " + comment.toString());
+				commentsView.addView(comment.toView(getActivity().getApplicationContext()).display());
+			}
+		}
+	}
+
+	/**
+	 * A post tip fragment containing a simple view
+	 * @author Evan Arnold
+	 */
+	public static class PostTipFragment extends Fragment {
+		public PostTipFragment() {
+		}
+
+		@Override
+		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+			final View rootView = inflater.inflate(R.layout.fragment_post_tip, container, false);
+			
+			final EditText tipInput = (EditText)rootView.findViewById(R.id.tip_input);
+			final Button postTipButton = (Button)rootView.findViewById(R.id.post_tip_button);
+			final ImageButton backButton = (ImageButton)rootView.findViewById(R.id.back_button);
+			
+			//Create a listener for the post tip button
+			postTipButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Log.d("help", "Post tip clicked!");
+					((MainActivity)getActivity()).postTip(tipInput.getText().toString());
+					getFragmentManager().popBackStackImmediate();
+				}
+			});
+
+			//Create a listener for the back button
+			backButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Log.d("help", "Back button clicked!");
+					getFragmentManager().popBackStackImmediate();
+				}
+			});
+			
+			return rootView;
+		}
+	}
+
+	/**
+	 * A post comment fragment containing a simple view
+	 * @author Evan Arnold
+	 */
+	public static class PostCommentFragment extends Fragment {
+		private int tipID;
+		public PostCommentFragment(int tipID) {
+			this.tipID = tipID;
+		}
+
+		@Override
+		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+			final View rootView = inflater.inflate(R.layout.fragment_post_comment, container, false);
+			
+			final EditText commentInput = (EditText)rootView.findViewById(R.id.comment_input);
+			final Button postCommentButton = (Button)rootView.findViewById(R.id.post_comment_button);
+			final ImageButton backButton = (ImageButton)rootView.findViewById(R.id.back_button);
+			
+			//Create a listener for the post comment button
+			postCommentButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Log.d("help", "Post comment clicked!");
+					((MainActivity)getActivity()).postComment(tipID, commentInput.getText().toString());
+					getFragmentManager().popBackStackImmediate();
+				}
+			});
+
+			//Create a listener for the back button
+			backButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Log.d("help", "Back button clicked!");
+					getFragmentManager().popBackStackImmediate();
+				}
+			});
+			
+			return rootView;
 		}
 	}
 	
@@ -360,19 +556,14 @@ public class MainActivity extends ActionBarActivity {
 	 */
 	public boolean postTip(final String tip) {
 		Log.d("help", "Creating new tip: " + tip);
-		
-		Future<Boolean> task = service.submit(new Callable<Boolean>(){
+		service.submit(new Callable<Boolean>(){
 			public Boolean call() {
 				return conn.postTip(tip, userID);
 			}
 		});
 		
-		try {
-			//TODO: Should we just assume that the tip was successfully posted?
-			return task.get();
-		} catch (Exception e) {
-			return false;
-		}
+		//Assume the tip was posted
+		return true;
 	}
 	
 	/**
@@ -384,17 +575,13 @@ public class MainActivity extends ActionBarActivity {
 	public boolean postComment(final int tipID, final String comment) {
 		Log.d("help", "Posting new comment: " + comment + " to tipID " + tipID);
 		
-		Future<Boolean> task = service.submit(new Callable<Boolean>(){
+		service.submit(new Callable<Boolean>(){
 			public Boolean call() {
 				return conn.postComment(tipID, comment, username);
 			}
 		});
 		
-		try {
-			//TODO: Should we just assume that the comment was successfully posted?
-			return task.get();
-		} catch (Exception e) {
-			return false;
-		}
+		//Assume the comment was posted
+		return true;
 	}
 }

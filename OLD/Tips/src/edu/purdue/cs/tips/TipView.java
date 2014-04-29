@@ -5,25 +5,28 @@ import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.*;
 
-public class CommentView {
+public class TipView {
 	private Context context;
-	private Comment comment;
-	
-	public CommentView(Context context, Comment comment) {
+	private int tipID;
+	private String tip;
+	private String postDate;
+	private int karma;
+	private int userID;
+
+	public TipView(Context context, Tip tip) {
 		this.context = context;
-		this.comment = comment;
+		
+		this.tipID = tip.getTipID();
+		this.tip = tip.getTip();
+		this.postDate = tip.getPostDate();
+		this.karma = tip.getKarma();
+		this.userID = tip.getUserID();
 	}
 	
 	public View display() {
 		LinearLayout layout = new LinearLayout(context);
 		layout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		layout.setOrientation(LinearLayout.VERTICAL);
-		
-		EditText text = new EditText(context);
-		text.setText(comment.toString());
-		text.setEnabled(false);
-		
-		layout.addView(text);
 		//TODO: Make it look good
 		return layout;
 	}
@@ -31,11 +34,7 @@ public class CommentView {
 	public static View noResultsView(Context context) {
 		LinearLayout layout = new LinearLayout(context);
 		layout.setOrientation(LinearLayout.VERTICAL);
-		EditText text = new EditText(context);
-		text.setText("No comments to display");
-		text.setEnabled(false);
-		layout.addView(text);
+		//TODO: Display "No results" or something
 		return layout;
 	}
-
 }

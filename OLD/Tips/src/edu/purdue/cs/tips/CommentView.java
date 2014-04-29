@@ -3,27 +3,26 @@ package edu.purdue.cs.tips;
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.*;
+import android.widget.LinearLayout;
 
 public class CommentView {
 	private Context context;
-	private Comment comment;
+	private String poster;
+	private String postDate;
+	private String comment;
 	
 	public CommentView(Context context, Comment comment) {
 		this.context = context;
-		this.comment = comment;
+		
+		this.poster = comment.getPoster();
+		this.postDate = comment.getPostString();
+		this.comment = comment.getComment();
 	}
 	
 	public View display() {
 		LinearLayout layout = new LinearLayout(context);
 		layout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		layout.setOrientation(LinearLayout.VERTICAL);
-		
-		EditText text = new EditText(context);
-		text.setText(comment.toString());
-		text.setEnabled(false);
-		
-		layout.addView(text);
 		//TODO: Make it look good
 		return layout;
 	}
@@ -31,10 +30,7 @@ public class CommentView {
 	public static View noResultsView(Context context) {
 		LinearLayout layout = new LinearLayout(context);
 		layout.setOrientation(LinearLayout.VERTICAL);
-		EditText text = new EditText(context);
-		text.setText("No comments to display");
-		text.setEnabled(false);
-		layout.addView(text);
+		//TODO: Display "No results" or something
 		return layout;
 	}
 

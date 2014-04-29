@@ -1,5 +1,7 @@
 package edu.purdue.cs.tips;
 
+import android.content.Context;
+
 /**
  * Creates an immutable object representation of a tip
  * This class just contains a constructor and simple getter methods
@@ -87,5 +89,15 @@ public class Tip
 			"postDate:\t" + postDate + "\n" + 
 			"karma:\t\t" + karma + "\n" + 
 			"userID:\t\t" + userID + "\n";
+	}
+	
+	/**
+	 * Create a TipView representation of this tip
+	 * @param Context the context to create this TipView in
+	 * @return a TipView representation of this tip
+	 */
+	public TipView toView(Context context)
+	{
+		return new TipView(context, this);
 	}
 }

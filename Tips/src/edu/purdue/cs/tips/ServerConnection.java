@@ -41,6 +41,7 @@ public class ServerConnection
 		try
 		{
 			int userID = -1;
+			String line;
 			
 			String message = String.format("create|%s|%s", username, password);
 
@@ -50,11 +51,8 @@ public class ServerConnection
 			
 			out.println(message);
 
-			do
-			{
-				String line = in.readLine();
+			while ((line = in.readLine()) != null)
 				userID = Integer.parseInt(line);
-			} while (in.ready());
 
 			out.close();
 			socket.close();
@@ -79,6 +77,7 @@ public class ServerConnection
 		try
 		{
 			int userID = -1;
+			String line;
 			
 			String message = String.format("login|%s|%s", username, password);
 
@@ -88,11 +87,8 @@ public class ServerConnection
 			
 			out.println(message);
 
-			do
-			{
-				String line = in.readLine();
+			while ((line = in.readLine()) != null)
 				userID = Integer.parseInt(line);
-			} while (in.ready());
 
 			out.close();
 			socket.close();
@@ -116,6 +112,7 @@ public class ServerConnection
 		try
 		{
 			ArrayList<Tip> tips = new ArrayList<Tip>();
+			String line;
 			
 			String message = String.format("getNew|%d", limit);
 
@@ -124,10 +121,9 @@ public class ServerConnection
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			
 			out.println(message);
-
-			do
+			
+			while ((line = in.readLine()) != null)
 			{
-				String line = in.readLine();
 				String[] values = line.split("\\|");
 				
 				int tipID = Integer.parseInt(values[0]);
@@ -138,7 +134,7 @@ public class ServerConnection
 
 				Tip tip = new Tip(tipID, tipString, postDate, karma, userID);
 				tips.add(tip);
-			} while (in.ready());
+			}
 
 			out.close();
 			socket.close();
@@ -162,6 +158,7 @@ public class ServerConnection
 		try
 		{
 			ArrayList<Tip> tips = new ArrayList<Tip>();
+			String line;
 			
 			String message = String.format("getByTags|%s", tags[0]);
 			for (int i = 1; i < tags.length; i++)
@@ -173,9 +170,8 @@ public class ServerConnection
 			
 			out.println(message);
 
-			do
+			while ((line = in.readLine()) != null)
 			{
-				String line = in.readLine();
 				String[] values = line.split("\\|");
 				
 				int tipID = Integer.parseInt(values[0]);
@@ -186,7 +182,7 @@ public class ServerConnection
 
 				Tip tip = new Tip(tipID, tipString, postDate, karma, userID);
 				tips.add(tip);
-			} while (in.ready());
+			}
 
 			out.close();
 			socket.close();
@@ -210,6 +206,7 @@ public class ServerConnection
 		try
 		{
 			ArrayList<Tip> tips = new ArrayList<Tip>();
+			String line;
 			
 			String message = String.format("getByName|%s", username);
 
@@ -219,9 +216,8 @@ public class ServerConnection
 			
 			out.println(message);
 
-			do
+			while ((line = in.readLine()) != null)
 			{
-				String line = in.readLine();
 				String[] values = line.split("\\|");
 				
 				int tipID = Integer.parseInt(values[0]);
@@ -232,7 +228,7 @@ public class ServerConnection
 
 				Tip tip = new Tip(tipID, tipString, postDate, karma, userID);
 				tips.add(tip);
-			} while (in.ready());
+			}
 
 			out.close();
 			socket.close();
@@ -286,6 +282,7 @@ public class ServerConnection
 		{
 			ArrayList<Comment> comments = new ArrayList<Comment>();
 			String message = String.format("G %d", tipID);
+			String line;
 
 			Socket socket = new Socket(hostname, commentsPort);
 			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -293,23 +290,17 @@ public class ServerConnection
 			
 			out.println(message);
 
-			do
+			while ((line = in.readLine()) != null)
 			{
-				int start, pipe;
-				String line = in.readLine();
-
-				pipe = line.indexOf("|");
-				String name = line.substring(0, pipe);
-
-				start = pipe;
-				pipe = line.indexOf("|", pipe);
-
-				String dateString = line.substring(start, pipe);
-				String commentString = line.substring(pipe + 1);
+				Log.d("help", line);
+				String[] values = line.split("\\|", 3);
+				String name = values[0];
+				String dateString = values[1];
+				String commentString = values[2];
 
 				Comment comment = new Comment(name, dateString, commentString);
 				comments.add(comment);
-			} while (in.ready());
+			}
 			
 			socket.close();
 			return comments;

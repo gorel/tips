@@ -1,5 +1,7 @@
 package edu.purdue.cs.tips;
 
+import android.content.Context;
+
 /**
  * Represents a Comment on the server
  * Simple class with just a constructor and getter methods
@@ -61,5 +63,15 @@ public class Comment
 		return 	"poster:\t" + poster + "\n" +
 			"postDate\t" + postDate + "\n" +
 			"comment:\t" + comment + "\n";
+	}
+	
+	/**
+	 * Create a CommentView representation of this tip
+	 * @param Context the context to create this TipView in
+	 * @return a TipView representation of this tip
+	 */
+	public CommentView toView(Context context)
+	{
+		return new CommentView(context, this);
 	}
 }

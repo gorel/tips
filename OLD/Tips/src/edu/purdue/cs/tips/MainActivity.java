@@ -1,58 +1,42 @@
 package edu.purdue.cs.tips;
 
-import java.util.Locale;
-
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
+import android.support.v7.app.*;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.os.Bundle;
-import android.support.v4.view.ViewPager;
-import android.view.Gravity;
+import android.os.*;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.*;
+
+import java.util.ArrayList;
+import java.util.concurrent.*;
 
 public class MainActivity extends ActionBarActivity {
-
-	/**
-	 * The {@link android.support.v4.view.PagerAdapter} that will provide
-	 * fragments for each of the sections. We use a {@link FragmentPagerAdapter}
-	 * derivative, which will keep every loaded fragment in memory. If this
-	 * becomes too memory intensive, it may be best to switch to a
-	 * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-	 */
-	SectionsPagerAdapter mSectionsPagerAdapter;
-
-	/**
-	 * The {@link ViewPager} that will host the section contents.
-	 */
-	ViewPager mViewPager;
+	private ServerConnection conn;
+	private ExecutorService service;
+	private String username;
+	private int userID;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		// Create the adapter that will return a fragment for each of the three
-		// primary sections of the activity.
-		mSectionsPagerAdapter = new SectionsPagerAdapter(
-				getSupportFragmentManager());
-
-		// Set up the ViewPager with the sections adapter.
-		mViewPager = (ViewPager) findViewById(R.id.pager);
-		mViewPager.setAdapter(mSectionsPagerAdapter);
-
+		if (savedInstanceState == null) {
+			getSupportFragmentManager().beginTransaction().add(R.id.container, new LoginFragment()).commit();
+		}
+		
+		
+		conn = new ServerConnection("data.cs.purdue.edu", 9312, 9314);
+		service = Executors.newFixedThreadPool(1);
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
@@ -71,79 +55,346 @@ public class MainActivity extends ActionBarActivity {
 	}
 
 	/**
-	 * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
-	 * one of the sections/tabs/pages.
+	 * A login fragment containing a simple view.
 	 */
-	public class SectionsPagerAdapter extends FragmentPagerAdapter {
-
-		public SectionsPagerAdapter(FragmentManager fm) {
-			super(fm);
+	public static class LoginFragment extends Fragment {
+		public LoginFragment() {
 		}
 
 		@Override
-		public Fragment getItem(int position) {
-			// getItem is called to instantiate the fragment for the given page.
-			// Return a PlaceholderFragment (defined as a static inner class
-			// below).
-			return PlaceholderFragment.newInstance(position + 1);
+		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+			final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+
+			Button registerButton = (Button)rootView.findViewById(R.id.register_button);
+			Button loginButton = (Button)rootView.findViewById(R.id.login_button);
+			
+			//Create a listener for the register button
+			registerButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					TextView statusText = (TextView)rootView.findViewById(R.id.status); 
+					statusText.setVisibility(View.GONE);
+					
+					String username = ((EditText)rootView.findViewById(R.id.username_input)).getText().toString();
+					String password = ((EditText)rootView.findViewById(R.id.password_input)).getText().toString();
+					int status = ((MainActivity) getActivity()).createAccount(username, password);
+					
+					statusText.setVisibility(View.VISIBLE);
+					if (status == -1)
+						statusText.setText("There was an error :(");
+					else {
+						FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+						transaction.replace(R.id.container, new TipsViewFragment());
+						transaction.addToBackStack(null);
+						transaction.commit();
+					}
+				}
+			});
+			
+			//Create a listener for the login button
+			loginButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					TextView statusText = (TextView)rootView.findViewById(R.id.status);
+					statusText.setVisibility(View.GONE);
+					
+					String username = ((EditText)rootView.findViewById(R.id.username_input)).getText().toString();
+					String password = ((EditText)rootView.findViewById(R.id.password_input)).getText().toString();
+					int status = ((MainActivity) getActivity()).login(username, password);
+					
+					statusText.setVisibility(View.VISIBLE);
+					if (status == -2)
+						statusText.setText("Username already taken");
+					else if (status == -1)
+						statusText.setText("Error connecting to server");
+					else {
+						FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+						transaction.replace(R.id.container, new TipsViewFragment());
+						transaction.addToBackStack(null);
+						transaction.commit();
+					}
+				}
+			});
+			
+			return rootView;
+		}
+	}
+	
+	public static class TipsViewFragment extends Fragment {
+		private final int TIPLIMIT = 25;
+		private LinearLayout tipsView;
+		
+		public TipsViewFragment() {
 		}
 
 		@Override
-		public int getCount() {
-			// Show 3 total pages.
-			return 3;
+		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+			final View rootView = inflater.inflate(R.layout.fragment_tips_list, container, false);
+			
+			tipsView = (LinearLayout)rootView.findViewById(R.id.tips_view);
+			
+			Button searchUsernameButton = (Button)rootView.findViewById(R.id.search_by_username_button);
+			Button searchTagsButton = (Button)rootView.findViewById(R.id.search_by_tags_button);
+			Button postTipButton = (Button)rootView.findViewById(R.id.post_tip_button);
+			
+			//Create a listener for the register button
+			searchUsernameButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					String username = ((EditText)rootView.findViewById(R.id.search_by_username)).getText().toString();
+					ArrayList<Tip> tips = ((MainActivity)getActivity()).getTipsByUsername(username);
+					loadTips(tips);
+				}
+			});
+			
+			//Create a listener for the search by tags button
+			searchTagsButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					String[] tags = ((EditText)rootView.findViewById(R.id.search_by_tags)).getText().toString().replaceAll("#", "").split(" ");
+					ArrayList<Tip> tips = ((MainActivity)getActivity()).getTipsByTags(tags);
+					loadTips(tips);
+				}
+			});
+			
+			//Create a listener for the post tip button
+			postTipButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					//TODO Load a "post tip" page or create a dialog or something
+				}
+			});
+			
+			ArrayList<Tip> tips = ((MainActivity)getActivity()).getNewTips(TIPLIMIT);
+			loadTips(tips);
+			
+			return rootView;
 		}
-
-		@Override
-		public CharSequence getPageTitle(int position) {
-			Locale l = Locale.getDefault();
-			switch (position) {
-			case 0:
-				return getString(R.string.title_section1).toUpperCase(l);
-			case 1:
-				return getString(R.string.title_section2).toUpperCase(l);
-			case 2:
-				return getString(R.string.title_section3).toUpperCase(l);
+		
+		/**
+		 * Load the ArrayList of tips into the view
+		 * @param tips the list of tips to load
+		 */
+		private void loadTips(ArrayList<Tip> tips) {
+			tipsView.removeAllViews();
+			if (tips == null) {
+				Log.d("help", "Tips returned null!");
+				tipsView.addView(TipView.noResultsView(getActivity().getApplicationContext()));
+				return;
 			}
+			
+			for (Tip tip : tips) {
+				tipsView.addView(tip.toView(getActivity().getApplicationContext()).display());
+			}
+		}
+	}
+	
+	/**
+	 * Create an account
+	 * @param username the username to create the account with
+	 * @param password the password to create the account with
+	 * @return the new account's user_id
+	 */
+	public int createAccount(final String username, final String password) {
+		Future<Integer> task = service.submit(new Callable<Integer>(){
+			public Integer call() {
+				return conn.createAccount(username, password);
+			}
+		});
+		
+		//Display loading symbol
+		View loadingSymbol = findViewById(R.id.loading_symbol);
+		loadingSymbol.setVisibility(View.VISIBLE);
+		
+		try {
+			this.username = username;
+			userID = task.get();
+			loadingSymbol.setVisibility(View.GONE);
+			return userID;
+		} catch (Exception e) {
+			userID = -1;
+			return -1;
+		}
+	}
+	
+	/**
+	 * Attempt to login
+	 * @param username the username to login with
+	 * @param password the password to login with
+	 * @return the user's user_id
+	 */
+	public int login(final String username, final String password) {
+		Future<Integer> task = service.submit(new Callable<Integer>(){
+			public Integer call() {
+				return conn.login(username, password);
+			}
+		});
+		
+		//Display loading symbol
+		View loadingSymbol = findViewById(R.id.loading_symbol);
+		loadingSymbol.setVisibility(View.VISIBLE);
+		
+		try {
+			this.username = username;
+			userID = task.get();
+			loadingSymbol.setVisibility(View.GONE);
+			return userID;
+		} catch (Exception e) {
+			userID = -1;
+			return -1;
+		}
+	}
+	
+	/**
+	 * Get a list of <limit> new tips
+	 * @param limit the maximum number of tips to return
+	 * @return an arraylist of Tip objects
+	 */
+	public ArrayList<Tip> getNewTips(final int limit) {
+		Log.d("help", "Requested " + limit + " new tips");
+		
+		Future<ArrayList<Tip>> task = service.submit(new Callable<ArrayList<Tip>>(){
+			public ArrayList<Tip> call() {
+				return conn.getNewTips(limit);
+			}
+		});
+		
+		try {
+			return task.get();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	/**
+	 * Get a list of <limit> new tips
+	 * @param tags the tags to filter by
+	 * @return an arraylist of Tip objects
+	 */
+	public ArrayList<Tip> getTipsByTags(final String[] tags) {
+		for (String tag : tags)
+			Log.d("help", "Requested tips with tag: " + tag);
+		
+		Future<ArrayList<Tip>> task = service.submit(new Callable<ArrayList<Tip>>(){
+			public ArrayList<Tip> call() {
+				return conn.getTipsByTags(tags);
+			}
+		});
+		
+		try {
+			return task.get();
+		} catch (Exception e) {
 			return null;
 		}
 	}
 
 	/**
-	 * A placeholder fragment containing a simple view.
+	 * Get a list of <limit> new tips
+	 * @param username the username to filter by
+	 * @return an arraylist of Tip objects
 	 */
-	public static class PlaceholderFragment extends Fragment {
-		/**
-		 * The fragment argument representing the section number for this
-		 * fragment.
-		 */
-		private static final String ARG_SECTION_NUMBER = "section_number";
-
-		/**
-		 * Returns a new instance of this fragment for the given section number.
-		 */
-		public static PlaceholderFragment newInstance(int sectionNumber) {
-			PlaceholderFragment fragment = new PlaceholderFragment();
-			Bundle args = new Bundle();
-			args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-			fragment.setArguments(args);
-			return fragment;
-		}
-
-		public PlaceholderFragment() {
-		}
-
-		@Override
-		public View onCreateView(LayoutInflater inflater, ViewGroup container,
-				Bundle savedInstanceState) {
-			View rootView = inflater.inflate(R.layout.fragment_main, container,
-					false);
-			TextView textView = (TextView) rootView
-					.findViewById(R.id.section_label);
-			textView.setText(Integer.toString(getArguments().getInt(
-					ARG_SECTION_NUMBER)));
-			return rootView;
+	public ArrayList<Tip> getTipsByUsername(final String username) {
+		Log.d("help", "Requested tips by " + username);
+		
+		Future<ArrayList<Tip>> task = service.submit(new Callable<ArrayList<Tip>>(){
+			public ArrayList<Tip> call() {
+				return conn.getTipsByUsername(username);
+			}
+		});
+		
+		try {
+			return task.get();
+		} catch (Exception e) {
+			return null;
 		}
 	}
-
+	
+	/**
+	 * Get a list of <limit> new tips
+	 * @param tipID the tipID to vote
+	 * @param upvote whether this is an upvote or downvote
+	 * @return true on successful vote
+	 */
+	public boolean voteTip(final int tipID, final boolean upvote) {
+		Log.d("help", "Voting tip " + tipID + (upvote ? " up" : " down"));
+		
+		Future<Boolean> task = service.submit(new Callable<Boolean>(){
+			public Boolean call() {
+				return conn.voteTip(tipID, upvote);
+			}
+		});
+		
+		try {
+			return task.get();
+		} catch (Exception e) {
+			return false;
+		}
+	}
+	
+	/**
+	 * Get a list of <limit> new tips
+	 * @param tipID the tipID to get comments for
+	 * @return an arraylist of Comments
+	 */
+	public ArrayList<Comment> getCommentsForTip(final int tipID) {
+		Log.d("help", "Getting comments for tip " + tipID);
+		
+		Future<ArrayList<Comment>> task = service.submit(new Callable<ArrayList<Comment>>(){
+			public ArrayList<Comment> call() {
+				return conn.getCommentsForTip(tipID);
+			}
+		});
+		
+		try {
+			ArrayList<Comment> comments = task.get();
+			return comments;
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	/**
+	 * Post a new tip
+	 * @param tip the tip to post
+	 * @return whether or not the tip was successfully posted
+	 */
+	public boolean postTip(final String tip) {
+		Log.d("help", "Creating new tip: " + tip);
+		
+		Future<Boolean> task = service.submit(new Callable<Boolean>(){
+			public Boolean call() {
+				return conn.postTip(tip, userID);
+			}
+		});
+		
+		try {
+			//TODO: Should we just assume that the tip was successfully posted?
+			return task.get();
+		} catch (Exception e) {
+			return false;
+		}
+	}
+	
+	/**
+	 * Post a new comment to a tip
+	 * @param tipID the tip to post a comment to
+	 * @param comment the comment to post
+	 * @return whether or not the comment was successfully posted
+	 */
+	public boolean postComment(final int tipID, final String comment) {
+		Log.d("help", "Posting new comment: " + comment + " to tipID " + tipID);
+		
+		Future<Boolean> task = service.submit(new Callable<Boolean>(){
+			public Boolean call() {
+				return conn.postComment(tipID, comment, username);
+			}
+		});
+		
+		try {
+			//TODO: Should we just assume that the comment was successfully posted?
+			return task.get();
+		} catch (Exception e) {
+			return false;
+		}
+	}
 }

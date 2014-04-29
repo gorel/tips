@@ -96,8 +96,8 @@ public class Tip
 	 * @param Context the context to create this TipView in
 	 * @return a TipView representation of this tip
 	 */
-	public TipView toView(Context context)
+	public TipView toView(Context context, MainActivity activity)
 	{
-		return new TipView(context, this);
+		return new TipView(context, activity, this);
 	}
 }
