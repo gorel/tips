@@ -190,7 +190,7 @@ process_request(int fd)
 	//Read which file was requested
 	char readbuf[BUF_SIZE] = "";
 	int n = read(fd, readbuf, BUF_SIZE);
-	readbuf[n-2] = '\0';
+	readbuf[n-1] = '\0';
 
 	//Scan the request to parse relevant information
 	type = readbuf[0];
