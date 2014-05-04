@@ -213,7 +213,7 @@ class ThreadedHandler implements Runnable
 			TreeSet<Integer> tipIDs = new TreeSet<Integer>();
 			ArrayList<String> tips = new ArrayList<String>();
 
-			String query = "SELECT tip_id FROM tags WHERE tag LIKE ?";
+			String query = "SELECT tip_id FROM tags WHERE UPPER(tag) LIKE UPPER(?)";
 			PreparedStatement stat = connection.prepareStatement(query);
 			stat.setString(1, tags[0]);
 
@@ -260,8 +260,9 @@ class ThreadedHandler implements Runnable
 
 				stat.close();
 				results.close();
-				connection.close();
 			}
+			
+			connection.close();
 
 			return tips;
 		}
