@@ -171,7 +171,7 @@ class ThreadedHandler implements Runnable
 			
 			ArrayList<String> tips = new ArrayList<String>();
 			
-			String query = "SELECT * FROM tips ORDER BY post_date LIMIT ?";
+			String query = "SELECT * FROM tips ORDER BY post_date DESC LIMIT ?";
 			PreparedStatement stat = connection.prepareStatement(query);
 			stat.setInt(1, limit);
 
@@ -355,6 +355,67 @@ class ThreadedHandler implements Runnable
 		{
 			e.printStackTrace();
 			return false;
+		}
+	}
+
+	/**
+	 * Get the username associated with a userID
+	 * @param userID the userID to look up in the database
+	 * @return the username associated with that userID
+	 */
+	public String getUsername(final int userID)
+	{
+		try
+		{
+			String name = null;
+			Connection connection = getConnection();
+
+			String query = "SELECT username FROM users WHERE user_id = ?";
+			PreparedStatement stat = connection.prepareStatement(query);
+			stat.setInt(1, userID);
+
+			ResultSet results = stat.executeQuery();
+			while (results.next())
+				name = results.getString("username");
+
+			results.close();
+			stat.close();
+			connection.close();
+
+			return name;
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public int getKarma(final int tipID)
+	{
+		try
+		{
+			int karma = 0;
+			Connection connection = getConnection();
+
+			String query = "SELECT karma FROM tips WHERE tip_id = ?";
+			PreparedStatement stat = connection.prepareStatement(query);
+			stat.setInt(1, tipID);
+
+			ResultSet results = stat.executeQuery();
+			while (results.next())
+				karma = results.getInt("karma");
+
+			results.close();
+			stat.close();
+			connection.close();
+
+			return karma;
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			return 9001;
 		}
 	}
 	
@@ -550,6 +611,25 @@ class ThreadedHandler implements Runnable
 				{
 					out.println("null");
 				}
+			}
+			else if (command.equals("getByID")) //getByID|<userID>
+			{
+				int start = index + 1;
+				int userID = Integer.parseInt(request.substring(start));
+
+				String username = getUsername(userID);
+				if (username != null)
+					out.println(username);
+				else
+					out.println("Nobody");
+			}
+			else if (command.equals("getKarmaFor")) //getKarmaFor|<tipID>
+			{
+				int start = index + 1;
+				int tipID = Integer.parseInt(request.substring(start));
+
+				int karma = getKarma(tipID);
+				out.println(karma);
 			}
 			else if (command.equals("voteTip")) //voteTip|<tipID>|<+/->
 			{
