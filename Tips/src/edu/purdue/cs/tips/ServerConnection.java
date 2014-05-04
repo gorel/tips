@@ -371,4 +371,70 @@ public class ServerConnection
 			return false;
 		}
 	}
+	
+	/**
+	 * Retrieve the username associated with the given userID
+	 * @param userID the userID to look up in the database
+	 * @return the username associated with that userID
+	 */
+	public String getUsername(int userID)
+	{
+		try
+		{
+			String name;
+			
+			String message = String.format("getByID|%d", userID);
+
+			Socket socket = new Socket(hostname, tipsPort);
+			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			
+			out.println(message);
+			
+			name = in.readLine();
+
+			out.close();
+			socket.close();
+			
+			return name;
+		}
+		catch (Exception e)
+		{
+			Log.e(e.getClass().getName(), e.getMessage(), e);
+			return "Nobody";
+		}
+	}
+	
+	/**
+	 * Retrieve the karma count associated with the given tipID
+	 * @param tipID the tipID to look up in the database
+	 * @return the karma count associated with the given tipID
+	 */
+	public int getKarma(int tipID)
+	{
+		try
+		{
+			int karma = 0;
+			
+			String message = String.format("getKarmaFor|%d", tipID);
+
+			Socket socket = new Socket(hostname, tipsPort);
+			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			
+			out.println(message);
+			
+			karma = Integer.parseInt(in.readLine());
+
+			out.close();
+			socket.close();
+			
+			return karma;
+		}
+		catch (Exception e)
+		{
+			Log.e(e.getClass().getName(), e.getMessage(), e);
+			return 9001;
+		}
+	}
 }

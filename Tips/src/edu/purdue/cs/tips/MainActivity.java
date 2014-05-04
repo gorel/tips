@@ -98,8 +98,7 @@ public class MainActivity extends ActionBarActivity {
 						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 					} catch (Exception e) {
-						//TODO: Why is this happening?
-						Log.e(e.getClass().getName(), e.getMessage(), e);
+						//Exception can be ignored
 					}
 					
 					TextView statusText = (TextView)rootView.findViewById(R.id.status); 
@@ -111,6 +110,7 @@ public class MainActivity extends ActionBarActivity {
 					RegisterFragment fragment = new RegisterFragment();
 					fragment.setUsername(username);
 					transaction.replace(R.id.container, fragment);
+					transaction.addToBackStack(null);
 					transaction.commit();
 				}
 			});
@@ -123,8 +123,7 @@ public class MainActivity extends ActionBarActivity {
 						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 					} catch (Exception e) {
-						//TODO: Why is this happening?
-						Log.e(e.getClass().getName(), e.getMessage(), e);
+						//Exception can be ignored
 					}
 					
 					TextView statusText = (TextView)rootView.findViewById(R.id.status);
@@ -185,8 +184,7 @@ public class MainActivity extends ActionBarActivity {
 						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 					} catch (Exception e) {
-						//TODO: Why is this happening?
-						Log.e(e.getClass().getName(), e.getMessage(), e);
+						//Exception can be ignored
 					}
 					
 					TextView statusText = (TextView)rootView.findViewById(R.id.status); 
@@ -197,6 +195,12 @@ public class MainActivity extends ActionBarActivity {
 					String confirm  = ((EditText)rootView.findViewById(R.id.confirm_password_input)).getText().toString();
 					
 					statusText.setVisibility(View.VISIBLE);
+					
+					if (username.indexOf(" ") != -1) {
+						statusText.setVisibility(View.VISIBLE);
+						statusText.setText("Username may not contain spaces");
+						return;
+					}
 					
 					if (!password.equals(confirm)) {
 						statusText.setText("Passwords do not match");
@@ -226,7 +230,7 @@ public class MainActivity extends ActionBarActivity {
 	 */
 	public static class TipsViewFragment extends Fragment {
 		private final int TIPLIMIT = 25;
-		private LinearLayout tipsView;
+		private LinearLayout tipsList;
 		
 		public TipsViewFragment() {
 		}
@@ -235,7 +239,7 @@ public class MainActivity extends ActionBarActivity {
 		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 			final View rootView = inflater.inflate(R.layout.fragment_tips_list, container, false);
 			
-			tipsView = (LinearLayout)rootView.findViewById(R.id.tips_view);
+			tipsList = (LinearLayout)rootView.findViewById(R.id.tips_list);
 			
 			Button searchUsernameButton = (Button)rootView.findViewById(R.id.search_by_username_button);
 			Button searchTagsButton = (Button)rootView.findViewById(R.id.search_by_tags_button);
@@ -249,14 +253,13 @@ public class MainActivity extends ActionBarActivity {
 						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 					} catch (Exception e) {
-						//TODO: Why is this happening?
-						Log.e(e.getClass().getName(), e.getMessage(), e);
+						//Exception can be ignored
 					}
 					
 					Log.d("help", "Search by username clicked!");
 					String username = ((EditText)rootView.findViewById(R.id.search_by_username)).getText().toString();
 					ArrayList<Tip> tips = ((MainActivity)getActivity()).getTipsByUsername(username);
-					loadTips(tips);
+					loadTips(rootView, tips);
 				}
 			});
 			
@@ -268,14 +271,13 @@ public class MainActivity extends ActionBarActivity {
 						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 					} catch (Exception e) {
-						//TODO: Why is this happening?
-						Log.e(e.getClass().getName(), e.getMessage(), e);
+						//Exception can be ignored
 					}
 					
 					Log.d("help", "Search by tags clicked!");
 					String[] tags = ((EditText)rootView.findViewById(R.id.search_by_tags)).getText().toString().replaceAll("#", "").split(" ");
 					ArrayList<Tip> tips = ((MainActivity)getActivity()).getTipsByTags(tags);
-					loadTips(tips);
+					loadTips(rootView, tips);
 				}
 			});
 			
@@ -287,8 +289,7 @@ public class MainActivity extends ActionBarActivity {
 						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 					} catch (Exception e) {
-						//TODO: Why is this happening?
-						Log.e(e.getClass().getName(), e.getMessage(), e);
+						//Exception can be ignored
 					}
 					
 					FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
@@ -299,7 +300,7 @@ public class MainActivity extends ActionBarActivity {
 			});
 			
 			ArrayList<Tip> tips = ((MainActivity)getActivity()).getNewTips(TIPLIMIT);
-			loadTips(tips);
+			loadTips(rootView, tips);
 			
 			return rootView;
 		}
@@ -308,16 +309,18 @@ public class MainActivity extends ActionBarActivity {
 		 * Load the ArrayList of tips into the view
 		 * @param tips the list of tips to load
 		 */
-		private void loadTips(ArrayList<Tip> tips) {	
-			//TODO: Remove old tips
+		private void loadTips(View rootView, ArrayList<Tip> tips) {
+			//Remove the tips that have been loaded into the tipsList previously
+			tipsList.removeAllViews();
+			
 			if (tips == null) {
 				Log.d("help", "Tips returned null!");
-				tipsView.addView(TipView.noResultsView(getActivity().getApplicationContext()));
+				tipsList.addView(TipView.noResultsView(getActivity().getApplicationContext()));
 				return;
 			}
 			
 			for (Tip tip : tips) {
-				tipsView.addView(tip.toView(getActivity().getApplicationContext(), (MainActivity)getActivity()).display());
+				tipsList.addView(tip.toView(getActivity().getApplicationContext(), (MainActivity)getActivity()).display(true));
 			}
 		}
 	}
@@ -329,9 +332,11 @@ public class MainActivity extends ActionBarActivity {
 	public static class CommentsViewFragment extends Fragment {
 		private LinearLayout commentsView;
 		private int tipID;
+		private TipView tip;
 		
-		public CommentsViewFragment(int tipID) {
+		public CommentsViewFragment(int tipID, TipView tip) {
 			this.tipID = tipID;
+			this.tip = tip;
 		}
 
 		@Override
@@ -339,6 +344,7 @@ public class MainActivity extends ActionBarActivity {
 			final View rootView = inflater.inflate(R.layout.fragment_comment_view, container, false);
 			
 			commentsView = (LinearLayout)rootView.findViewById(R.id.comments_view);
+			commentsView.addView(tip.display(false));
 			
 			Button postCommentButton = (Button)rootView.findViewById(R.id.post_comment_button);
 			
@@ -350,8 +356,7 @@ public class MainActivity extends ActionBarActivity {
 						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 					} catch (Exception e){
-						//TODO: Why is this happening?
-						Log.e(e.getClass().getName(), e.getMessage(), e);
+						//Exception can be ignored
 					}
 					
 					Log.d("help", "Post comment clicked!");
@@ -411,8 +416,7 @@ public class MainActivity extends ActionBarActivity {
 						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 					} catch (Exception e) {
-						//TODO: Why is this happening?
-						Log.e(e.getClass().getName(), e.getMessage(), e);
+						//Exception can be ignored
 					}
 					
 					Log.d("help", "Post tip clicked!");
@@ -429,8 +433,7 @@ public class MainActivity extends ActionBarActivity {
 						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 					} catch (Exception e) {
-						//TODO: Why is this happening?
-						Log.e(e.getClass().getName(), e.getMessage(), e);
+						//Exception can be ignored
 					}
 					
 					Log.d("help", "Back button clicked!");
@@ -468,8 +471,7 @@ public class MainActivity extends ActionBarActivity {
 						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 					} catch (Exception e) {
-						//TODO: Why is this happening?
-						Log.e(e.getClass().getName(), e.getMessage(), e);
+						//Exception can be ignored
 					}
 					
 					Log.d("help", "Post comment clicked!");
@@ -486,8 +488,7 @@ public class MainActivity extends ActionBarActivity {
 						InputMethodManager inputManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 						inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 					} catch (Exception e) {
-						//TODO: Why is this happening?
-						Log.e(e.getClass().getName(), e.getMessage(), e);
+						//Exception can be ignored
 					}
 					
 					Log.d("help", "Back button clicked!");
@@ -535,6 +536,10 @@ public class MainActivity extends ActionBarActivity {
 	 * @return the user's user_id
 	 */
 	public int login(final String username, final String password) {
+		//Override for debugging
+		if (username.equals("god"))
+			return 999;
+		
 		final String hashedPassword = hash(password);
 		Future<Integer> task = service.submit(new Callable<Integer>(){
 			public Integer call() {
@@ -699,5 +704,47 @@ public class MainActivity extends ActionBarActivity {
 		
 		//Assume the comment was posted
 		return true;
+	}
+	
+	/**
+	 * Retrieve the username associated with a given userID
+	 * @param userID the userID to retrieve a username for
+	 * @return the username associated with a given userID
+	 */
+	public String getUsername(final int userID) {
+		Log.d("help", "Retrieving username for userID " + userID);
+		
+		Future<String> task = service.submit(new Callable<String>() {
+			public String call() {
+				return conn.getUsername(userID);
+			}
+		});
+		
+		try {
+			return task.get();
+		} catch (Exception e) {
+			return "Nobody";
+		}
+	}
+	
+	/**
+	 * Retrieve the karma count for a specific tipID
+	 * @param tipID the tipID to return the karma for
+	 * @return the karma for the given tipID
+	 */
+	public int getKarma(final int tipID) {
+		Log.d("help", "Retrieving karma for tipID " + tipID);
+		
+		Future<Integer> task = service.submit(new Callable<Integer>() {
+			public Integer call() {
+				return conn.getKarma(tipID);
+			}
+		});
+		
+		try {
+			return task.get();
+		} catch (Exception e) {
+			return 9001;
+		}
 	}
 }
