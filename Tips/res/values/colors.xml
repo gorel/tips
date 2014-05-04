@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#000000</color>
+    <color name="purdue_gold">#B1946C</color>
+    <color name="white">#FFFFFF</color>
+    <color name="red">#CC0000</color>
+    <color name="button_black">#BB000000</color>
+    
+</resources>

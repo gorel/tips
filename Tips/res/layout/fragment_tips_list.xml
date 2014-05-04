@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollview_wrapper"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+   	android:background="@color/purdue_gold"
+    android:orientation="vertical" >
+       
+	<ScrollView
+	    android:layout_width="fill_parent"
+	    android:layout_height="0dip"
+	    android:layout_weight=".75"
+   		android:background="@color/purdue_gold" >
+	    
+	    <LinearLayout
+	    	android:id="@+id/tips_view"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:orientation="vertical" >
+	    
+		    <LinearLayout
+		    	android:id="@+id/search_bars_layout"
+		        android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:orientation="vertical" >
+		        
+			    <LinearLayout
+			        android:id="@+id/username_layout"
+			        android:layout_width="fill_parent"
+			        android:layout_height="wrap_content"
+			        android:orientation="horizontal" >
+	
+			        <EditText
+			            android:id="@+id/search_by_username"
+			            android:layout_width="0dip"
+			            android:layout_height="wrap_content"
+			            android:layout_weight=".75"
+			            android:ems="8"
+			            android:inputType="textNoSuggestions"
+			            android:hint="@string/search_by_username"
+			            android:textColorHint="@color/white" />
+			        
+			        <Button
+			            android:id="@+id/search_by_username_button"
+			            android:layout_weight=".25"
+			            android:layout_width="0dip"
+			            android:layout_height="wrap_content"
+			            android:text="@string/search" >
+			        </Button>
+			        
+		   	 	</LinearLayout>
+	        
+			    <LinearLayout
+			        android:id="@+id/tags_layout"
+			        android:layout_width="fill_parent"
+			        android:layout_height="wrap_content"
+			        android:orientation="horizontal" >
+		
+			        <EditText
+			            android:id="@+id/search_by_tags"
+			            android:layout_weight=".75"
+			            android:layout_width="0dip"
+			            android:layout_height="wrap_content"
+			            android:inputType="textNoSuggestions"
+			            android:hint="@string/search_by_tags"
+			            android:textColorHint="@color/white"
+			            android:ems="8" >
+			        </EditText>
+		        
+			        <Button
+			            android:id="@+id/search_by_tags_button"
+			            android:layout_weight=".25"
+				            android:layout_width="0dip"
+			            android:layout_height="wrap_content"
+			            android:text="@string/search" >
+			        </Button>
+			        
+		    	</LinearLayout>
+	   	 	
+		    </LinearLayout>
+	  
+		    <LinearLayout
+		    	android:id="@+id/tips_list"
+		        android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:orientation="vertical" >
+			    
+	    		<!-- This is where tips will be loaded -->
+	    		
+	    	</LinearLayout>
+	    	
+	  </LinearLayout>
+	  
+	</ScrollView>
+
+	<Button
+	    android:id="@+id/post_tip_button"
+	    style="?android:attr/buttonStyleSmall"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:text="@string/post_tip" >
+	</Button>
+	
+</LinearLayout>
