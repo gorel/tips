@@ -55,7 +55,7 @@ public class TipView {
 		date.setText(tip.getPostDate() + " by " + activity.getUsername(tip.getUserID()));
 		date.setTextColor(Color.BLACK);
 		
-		TextView karma = new TextView(context);
+		final TextView karma = new TextView(context);
 		karma.setText("Karma: " + tip.getKarma());
 		karma.setTextColor(Color.BLACK);
 		
@@ -78,8 +78,14 @@ public class TipView {
 				downvoteButton.setBackgroundColor(context.getResources().getColor(R.color.purdue_gold));
 
 				//If the user already downvoted this tip, we have to upvote it twice, effectively
-				if (!downvoteButton.isEnabled())
+				if (!downvoteButton.isEnabled()){
 					activity.voteTip(tip.getTipID(), true);
+					karma.setText("Karma: " + (tip.getKarma() + 2));
+				}
+				else {
+					karma.setText("Karma: " + (tip.getKarma() + 1));
+				}
+				
 				activity.voteTip(tip.getTipID(), true);
 			}
 		});
@@ -94,8 +100,14 @@ public class TipView {
 				upvoteButton.setBackgroundColor(context.getResources().getColor(R.color.purdue_gold));
 
 				//If the user already upvoted this tip, we have to downvote it twice, effectively
-				if (!upvoteButton.isEnabled())
+				if (!upvoteButton.isEnabled()) {
 					activity.voteTip(tip.getTipID(), false);
+					karma.setText("Karma: " + (tip.getKarma() - 2));
+				}
+				else {
+					karma.setText("Karma: " + (tip.getKarma() - 1));
+				}
+				
 				activity.voteTip(tip.getTipID(), false);
 			}
 		});

@@ -507,7 +507,7 @@ public class MainActivity extends ActionBarActivity {
 	 * @return the new account's user_id
 	 */
 	public int createAccount(final String username, final String password) {
-		final String hashedPassword = hash(password);
+		final String hashedPassword = hash(username + hash(password) + username);
 		Future<Integer> task = service.submit(new Callable<Integer>(){
 			public Integer call() {
 				return conn.createAccount(username, hashedPassword);
@@ -539,8 +539,8 @@ public class MainActivity extends ActionBarActivity {
 		//Override for debugging
 		if (username.equals("god"))
 			return 999;
-		
-		final String hashedPassword = hash(password);
+
+		final String hashedPassword = hash(username + hash(password) + username);
 		Future<Integer> task = service.submit(new Callable<Integer>(){
 			public Integer call() {
 				return conn.login(username, hashedPassword);
